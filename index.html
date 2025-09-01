@@ -1,0 +1,1792 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visor de Empleo Público Chile con Hallazgos Dinámicos</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/date-fns@2.29.3/index.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            color: #333;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            background: linear-gradient(90deg, #003366, #0055a4);
+            color: white;
+            padding: 20px 0;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            border-radius: 0 0 15px 15px;
+            margin-bottom: 30px;
+        }
+        
+        h1 {
+            text-align: center;
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            text-align: center;
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+        
+        .voice-badge {
+            display: inline-block;
+            background: rgba(255,255,255,0.2);
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            margin-top: 10px;
+        }
+        
+        .dashboard {
+            display: grid;
+            grid-template-columns: 1fr 350px;
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+        
+        .main-panel {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.08);
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .chat-panel {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.08);
+            display: flex;
+            flex-direction: column;
+            height: 650px;
+        }
+        
+        .filters-section {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 25px;
+            border-left: 5px solid #0055a4;
+            position: sticky;
+            top: 20px;
+            z-index: 10;
+        }
+        
+        .filters-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+            color: #0055a4;
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+        
+        .filters {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        
+        .filter-group {
+            flex: 1;
+            min-width: 200px;
+        }
+        
+        .filter-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #0055a4;
+        }
+        
+        select, input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+        
+        select:focus, input:focus {
+            border-color: #0055a4;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(0,85,164,0.2);
+        }
+        
+        .data-visualization {
+            margin-bottom: 30px;
+            flex: 1;
+        }
+        
+        .chart-container {
+            position: relative;
+            height: 350px;
+            margin-bottom: 30px;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .stat-card {
+            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 6px 15px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .stat-card h3 {
+            font-size: 2.2rem;
+            margin-bottom: 8px;
+        }
+        
+        .stat-card p {
+            font-size: 1rem;
+            opacity: 0.9;
+        }
+        
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+        
+        .data-table th {
+            background: #0055a4;
+            color: white;
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+        }
+        
+        .data-table td {
+            padding: 15px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        .data-table tr:nth-child(even) {
+            background-color: #f8f9fa;
+        }
+        
+        .data-table tr:hover {
+            background-color: #e8f4fc;
+        }
+        
+        .chat-header {
+            background: #0055a4;
+            color: white;
+            padding: 15px;
+            border-radius: 12px 12px 0 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .chat-header h3 {
+            flex: 1;
+        }
+        
+        .chat-status {
+            width: 10px;
+            height: 10px;
+            background: #4caf50;
+            border-radius: 50%;
+            display: inline-block;
+        }
+        
+        .voice-controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+            padding: 10px;
+            background: #f0f7ff;
+            border-radius: 8px;
+        }
+        
+        .voice-toggle {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 24px;
+        }
+        
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 24px;
+        }
+        
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        
+        input:checked + .slider {
+            background-color: #0055a4;
+        }
+        
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+        
+        .voice-indicator {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 0.9rem;
+            color: #0055a4;
+        }
+        
+        .voice-indicator.active {
+            color: #f44336;
+        }
+        
+        .voice-indicator i {
+            font-size: 1.2rem;
+        }
+        
+        .chat-messages {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            background: #f8f9fa;
+            border-radius: 0 0 12px 12px;
+            margin-bottom: 15px;
+        }
+        
+        .message {
+            margin-bottom: 15px;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .message.user {
+            align-items: flex-end;
+        }
+        
+        .message.bot {
+            align-items: flex-start;
+        }
+        
+        .message-bubble {
+            max-width: 80%;
+            padding: 12px 18px;
+            border-radius: 18px;
+            position: relative;
+        }
+        
+        .message.user .message-bubble {
+            background: #0055a4;
+            color: white;
+            border-bottom-right-radius: 4px;
+        }
+        
+        .message.bot .message-bubble {
+            background: white;
+            color: #333;
+            border: 1px solid #e0e0e0;
+            border-bottom-left-radius: 4px;
+        }
+        
+        .message-time {
+            font-size: 0.75rem;
+            color: #777;
+            margin-top: 5px;
+        }
+        
+        .voice-message {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 5px;
+            font-size: 0.8rem;
+            color: #666;
+        }
+        
+        .voice-message i {
+            color: #0055a4;
+        }
+        
+        .suggestions-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 10px;
+        }
+        
+        .suggestion-btn {
+            background: #e8f4fc;
+            color: #0055a4;
+            border: 1px solid #b8e0ff;
+            border-radius: 20px;
+            padding: 6px 12px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .suggestion-btn:hover {
+            background: #d0ebff;
+        }
+        
+        .chat-input {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .chat-input input {
+            flex: 1;
+            border: 2px solid #e0e0e0;
+            border-radius: 25px;
+            padding: 12px 20px;
+        }
+        
+        .chat-input button {
+            background: #0055a4;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            transition: all 0.3s ease;
+        }
+        
+        .chat-input button:hover {
+            background: #003d7a;
+        }
+        
+        .voice-button {
+            background: #f44336 !important;
+            position: relative;
+        }
+        
+        .voice-button.listening {
+            animation: pulse 1.5s infinite;
+        }
+        
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(244, 67, 54, 0.7);
+            }
+            70% {
+                box-shadow: 0 0 0 10px rgba(244, 67, 54, 0);
+            }
+            100% {
+                box-shadow: 0 0 0 0 rgba(244, 67, 54, 0);
+            }
+        }
+        
+        .suggestions {
+            margin-top: 15px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        
+        .suggestion {
+            background: #e8f4fc;
+            color: #0055a4;
+            border: 1px solid #b8e0ff;
+            border-radius: 20px;
+            padding: 8px 15px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .suggestion:hover {
+            background: #d0ebff;
+        }
+        
+        .tabs {
+            display: flex;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+        
+        .tab {
+            padding: 12px 25px;
+            cursor: pointer;
+            font-weight: 600;
+            color: #666;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s ease;
+        }
+        
+        .tab.active {
+            color: #0055a4;
+            border-bottom-color: #0055a4;
+        }
+        
+        .tab-content {
+            display: none;
+            flex: 1;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .notification {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #4caf50;
+            color: white;
+            padding: 15px 25px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.4s ease;
+            z-index: 1000;
+        }
+        
+        .notification.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+        
+        .notification.error {
+            background: #f44336;
+        }
+        
+        .voice-error {
+            background: #ffecb3;
+            color: #e65100;
+            padding: 10px 15px;
+            border-radius: 8px;
+            margin-top: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9rem;
+        }
+        
+        .data-quality-indicator {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #e8f5e9;
+            border-radius: 12px;
+            border-left: 5px solid #4caf50;
+        }
+        
+        .data-quality-indicator i {
+            color: #4caf50;
+            font-size: 1.5rem;
+        }
+        
+        .data-quality-indicator h4 {
+            color: #2e7d32;
+            margin-bottom: 5px;
+        }
+        
+        .data-quality-indicator p {
+            color: #388e3c;
+            font-size: 0.9rem;
+        }
+        
+        .filter-info {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: 10px;
+            padding: 8px 12px;
+            background: #e3f2fd;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            color: #0d47a1;
+        }
+        
+        .filter-info span {
+            font-weight: 600;
+        }
+        
+        .findings-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 12px;
+            margin-top: 20px;
+            border-left: 5px solid #0055a4;
+        }
+        
+        .findings-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+            color: #0055a4;
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+        
+        .findings-list {
+            list-style: none;
+        }
+        
+        .findings-list li {
+            position: relative;
+            padding-left: 25px;
+            margin-bottom: 12px;
+            line-height: 1.5;
+        }
+        
+        .findings-list li::before {
+            content: "•";
+            position: absolute;
+            left: 0;
+            color: #0055a4;
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+        
+        .highlight {
+            background: #e3f2fd;
+            padding: 2px 5px;
+            border-radius: 3px;
+            font-weight: 600;
+            color: #0055a4;
+        }
+        
+        @media (max-width: 1024px) {
+            .dashboard {
+                grid-template-columns: 1fr;
+            }
+            
+            .chat-panel {
+                height: 500px;
+            }
+            
+            .filters-section {
+                position: relative;
+                top: 0;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .filters {
+                flex-direction: column;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .voice-controls {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .filter-info {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 5px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Visor de Empleo Público Chile con Hallazgos Dinámicos</h1>
+            <p class="subtitle">Plataforma de análisis con hallazgos clave que se adaptan a tus filtros</p>
+            <div class="voice-badge">
+                <i class="fas fa-lightbulb"></i> Hallazgos dinámicos según filtros
+            </div>
+        </header>
+        
+        <div class="dashboard">
+            <div class="main-panel">
+                <!-- Sección de filtros persistente -->
+                <div class="filters-section">
+                    <div class="filters-title">
+                        <i class="fas fa-filter"></i>
+                        <span>Filtros de Datos</span>
+                        <small style="margin-left: auto; color: #666;">Aplicables a todas las vistas</small>
+                    </div>
+                    
+                    <div class="filters">
+                        <div class="filter-group">
+                            <label for="organismo">Organismo</label>
+                            <select id="organismo">
+                                <option value="todos">Todos los organismos</option>
+                                <option value="Ministerio de Salud">Ministerio de Salud</option>
+                                <option value="Ministerio de Educación">Ministerio de Educación</option>
+                                <option value="Municipalidad de Santiago">Municipalidad de Santiago</option>
+                                <option value="Servicio de Impuestos Internos">Servicio de Impuestos Internos</option>
+                                <option value="Carabineros de Chile">Carabineros de Chile</option>
+                                <option value="Gendarmería de Chile">Gendarmería de Chile</option>
+                                <option value="Municipalidad de Las Condes">Municipalidad de Las Condes</option>
+                                <option value="Ministerio de Hacienda">Ministerio de Hacienda</option>
+                            </select>
+                        </div>
+                        
+                        <div class="filter-group">
+                            <label for="anio">Año</label>
+                            <select id="anio">
+                                <option value="todos">Todos los años</option>
+                                <option value="2023">2023</option>
+                                <option value="2022">2022</option>
+                                <option value="2021">2021</option>
+                                <option value="2020">2020</option>
+                                <option value="2019">2019</option>
+                                <option value="2018">2018</option>
+                            </select>
+                        </div>
+                        
+                        <div class="filter-group">
+                            <label for="contrato">Tipo de Contrato</label>
+                            <select id="contrato">
+                                <option value="todos">Todos los tipos</option>
+                                <option value="Planta">Planta</option>
+                                <option value="Contrata">Contrata</option>
+                                <option value="Honorarios">Honorarios</option>
+                                <option value="Código del Trabajo">Código del Trabajo</option>
+                            </select>
+                        </div>
+                        
+                        <div class="filter-group">
+                            <label for="calificacion">Calificación</label>
+                            <select id="calificacion">
+                                <option value="todos">Todas las calificaciones</option>
+                                <option value="Profesional">Profesional</option>
+                                <option value="Técnico">Técnico</option>
+                                <option value="Administrativo">Administrativo</option>
+                                <option value="Auxiliar">Auxiliar</option>
+                                <option value="Directivo">Directivo</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="filter-info">
+                        <span>Filtros activos:</span>
+                        <span id="activeFilters">Todos los organismos, Todos los años, Todos los tipos, Todas las calificaciones</span>
+                    </div>
+                </div>
+                
+                <div class="data-quality-indicator">
+                    <i class="fas fa-check-circle"></i>
+                    <div>
+                        <h4>Datos Simulados Realistas</h4>
+                        <p>Los datos siguen patrones coherentes con la realidad del empleo público chileno</p>
+                    </div>
+                </div>
+                
+                <div class="tabs">
+                    <div class="tab active" data-tab="dashboard">Dashboard</div>
+                    <div class="tab" data-tab="table">Tabla de Datos</div>
+                    <div class="tab" data-tab="analysis">Análisis Comparativo</div>
+                </div>
+                
+                <div class="tab-content active" id="dashboard">
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <h3 id="stat-personas">285,420</h3>
+                            <p>Personas Únicas</p>
+                        </div>
+                        <div class="stat-card">
+                            <h3 id="stat-remuneracion">$1,385,000</h3>
+                            <p>Remuneración Promedio</p>
+                        </div>
+                        <div class="stat-card">
+                            <h3 id="stat-organismos">8</h3>
+                            <p>Organismos</p>
+                        </div>
+                        <div class="stat-card">
+                            <h3 id="stat-presupuesto">$395.4B</h3>
+                            <p>Presupuesto Total</p>
+                        </div>
+                    </div>
+                    
+                    <div class="data-visualization">
+                        <h3 style="margin-bottom: 15px; color: #0055a4;">Remuneración Promedio por Organismo (2023)</h3>
+                        <div class="chart-container">
+                            <canvas id="remuneracionChart"></canvas>
+                        </div>
+                        
+                        <h3 style="margin-bottom: 15px; color: #0055a4;">Distribución de Tipos de Contrato (2023)</h3>
+                        <div class="chart-container">
+                            <canvas id="contratoChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="tab-content" id="table">
+                    <h3 style="margin-bottom: 20px; color: #0055a4;">Datos Detallados</h3>
+                    <div style="overflow-x: auto;">
+                        <table class="data-table" id="dataTable">
+                            <thead>
+                                <tr>
+                                    <th>Organismo</th>
+                                    <th>Año</th>
+                                    <th>Tipo Contrato</th>
+                                    <th>Calificación</th>
+                                    <th>Personas</th>
+                                    <th>Remuneración Promedio</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tableBody">
+                                <!-- Datos se llenarán con JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <div class="tab-content" id="analysis">
+                    <h3 style="margin-bottom: 20px; color: #0055a4;">Evolución de Remuneraciones (2018-2023)</h3>
+                    <div class="chart-container">
+                        <canvas id="comparativoChart"></canvas>
+                    </div>
+                    
+                    <div class="findings-section">
+                        <div class="findings-title">
+                            <i class="fas fa-lightbulb"></i>
+                            <span>Hallazgos Clave Dinámicos</span>
+                            <small style="margin-left: auto; color: #666;">Basados en tus filtros actuales</small>
+                        </div>
+                        <ul class="findings-list" id="findingsList">
+                            <!-- Hallazgos se generarán dinámicamente -->
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="chat-panel">
+                <div class="chat-header">
+                    <h3>Asistente con Hallazgos Dinámicos</h3>
+                    <span class="chat-status"></span>
+                </div>
+                
+                <div class="voice-controls">
+                    <div class="voice-toggle">
+                        <span>Respuestas de voz:</span>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="voiceToggle" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    <div class="voice-indicator" id="voiceIndicator">
+                        <i class="fas fa-microphone"></i>
+                        <span>Presiona para hablar</span>
+                    </div>
+                </div>
+                
+                <div class="chat-messages" id="chatMessages">
+                    <div class="message bot">
+                        <div class="message-bubble">
+                            ¡Hola! Soy tu asistente con hallazgos dinámicos. Los hallazgos clave se actualizarán automáticamente según los filtros que apliques.
+                        </div>
+                        <div class="message-time">10:00 AM</div>
+                    </div>
+                    
+                    <div class="message bot">
+                        <div class="message-bubble">
+                            Prueba preguntando algo como: <br>
+                            "¿Cuál es la remuneración promedio en el Ministerio de Salud en 2023?" <br>
+                            o <br>
+                            "Muestra la distribución de tipos de contrato"
+                        </div>
+                        <div class="message-time">10:01 AM</div>
+                    </div>
+                </div>
+                
+                <div class="suggestions">
+                    <div class="suggestion">Remuneración promedio</div>
+                    <div class="suggestion">Tipos de contrato</div>
+                    <div class="suggestion">Comparar ministerios</div>
+                    <div class="suggestion">Tendencias 2018-2023</div>
+                </div>
+                
+                <div class="chat-input">
+                    <input type="text" id="chatInput" placeholder="Escribe o habla tu consulta aquí...">
+                    <button id="voiceBtn" class="voice-button">
+                        <i class="fas fa-microphone"></i>
+                    </button>
+                    <button id="sendBtn">
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </div>
+                
+                <div id="voiceError" class="voice-error" style="display: none;">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <span id="voiceErrorText">Error de reconocimiento de voz</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="notification" id="notification">
+        <span id="notificationText">Datos actualizados correctamente</span>
+    </div>
+    
+    <script>
+        // Datos simulados realistas
+        const organismos = [
+            "Ministerio de Salud", 
+            "Ministerio de Educación", 
+            "Municipalidad de Santiago", 
+            "Servicio de Impuestos Internos", 
+            "Carabineros de Chile",
+            "Gendarmería de Chile",
+            "Municipalidad de Las Condes",
+            "Ministerio de Hacienda"
+        ];
+        
+        const tiposContrato = ["Planta", "Contrata", "Honorarios", "Código del Trabajo"];
+        const calificaciones = ["Profesional", "Técnico", "Administrativo", "Auxiliar", "Directivo"];
+        const años = [2018, 2019, 2020, 2021, 2022, 2023];
+        
+        // Base de datos de remuneraciones realistas por calificación y tipo de contrato
+        const baseRemuneraciones = {
+            "Directivo": { min: 2500000, max: 4500000 },
+            "Profesional": { min: 1200000, max: 2800000 },
+            "Técnico": { min: 800000, max: 1600000 },
+            "Administrativo": { min: 600000, max: 1200000 },
+            "Auxiliar": { min: 450000, max: 850000 }
+        };
+        
+        // Multiplicadores por tipo de contrato
+        const multiplicadoresContrato = {
+            "Planta": 1.35,
+            "Contrata": 1.0,
+            "Honorarios": 0.85,
+            "Código del Trabajo": 0.95
+        };
+        
+        // Multiplicadores por organismo
+        const multiplicadoresOrganismo = {
+            "Ministerio de Salud": 1.25,
+            "Ministerio de Educación": 1.15,
+            "Servicio de Impuestos Internos": 1.30,
+            "Carabineros de Chile": 1.20,
+            "Gendarmería de Chile": 1.18,
+            "Ministerio de Hacienda": 1.35,
+            "Municipalidad de Santiago": 0.85,
+            "Municipalidad de Las Condes": 0.90
+        };
+        
+        // Distribución de personal por tipo de contrato
+        const distribucionContrato = {
+            "Planta": 0.58,
+            "Contrata": 0.22,
+            "Honorarios": 0.15,
+            "Código del Trabajo": 0.05
+        };
+        
+        // Distribución de personal por calificación
+        const distribucionCalificacion = {
+            "Profesional": 0.35,
+            "Técnico": 0.25,
+            "Administrativo": 0.20,
+            "Auxiliar": 0.15,
+            "Directivo": 0.05
+        };
+        
+        // Generar datos simulados realistas
+        function generarDatosSimulados() {
+            const datos = [];
+            
+            // Tamaño base de empleados por organismo
+            const tamañoOrganismo = {
+                "Ministerio de Salud": 45000,
+                "Ministerio de Educación": 65000,
+                "Municipalidad de Santiago": 12000,
+                "Servicio de Impuestos Internos": 8500,
+                "Carabineros de Chile": 55000,
+                "Gendarmería de Chile": 15000,
+                "Municipalidad de Las Condes": 8000,
+                "Ministerio de Hacienda": 6500
+            };
+            
+            // Crecimiento anual promedio
+            const crecimientoAnual = 0.025; // 2.5%
+            
+            for (const organismo of organismos) {
+                const tamañoBase = tamañoOrganismo[organismo];
+                
+                for (const año of años) {
+                    // Calcular tamaño para este año (con crecimiento)
+                    const añosDesde2018 = año - 2018;
+                    const tamañoAño = Math.round(tamañoBase * Math.pow(1 + crecimientoAnual, añosDesde2018));
+                    
+                    // Distribuir por tipo de contrato
+                    for (const tipo of tiposContrato) {
+                        const numPorTipo = Math.round(tamañoAño * distribucionContrato[tipo]);
+                        
+                        // Distribuir por calificación
+                        for (const calificacion of calificaciones) {
+                            const numPorCalificacion = Math.round(numPorTipo * distribucionCalificacion[calificacion]);
+                            
+                            // Generar remuneración base para esta calificación
+                            const base = baseRemuneraciones[calificacion];
+                            const remuneracionBase = Math.round(base.min + Math.random() * (base.max - base.min));
+                            
+                            // Aplicar multiplicadores
+                            const remuneracionFinal = Math.round(
+                                remuneracionBase * 
+                                multiplicadoresContrato[tipo] * 
+                                multiplicadoresOrganismo[organismo] *
+                                (1 + (año - 2018) * 0.03) // Ajuste por inflación anual
+                            );
+                            
+                            // Añadir variación aleatoria
+                            const variacion = 0.9 + Math.random() * 0.2; // ±10%
+                            const remuneracionFinalConVariacion = Math.round(remuneracionFinal * variacion);
+                            
+                            datos.push({
+                                organismo,
+                                año,
+                                tipoContrato: tipo,
+                                calificacion,
+                                numPersonas: numPorCalificacion,
+                                remuneracion: remuneracionFinalConVariacion
+                            });
+                        }
+                    }
+                }
+            }
+            
+            return datos;
+        }
+        
+        const datosSimulados = generarDatosSimulados();
+        
+        // Variables para el reconocimiento de voz
+        let recognition;
+        let isListening = false;
+        let voiceEnabled = true;
+        
+        // Inicializar reconocimiento de voz
+        function initSpeechRecognition() {
+            if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+                const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+                recognition = new SpeechRecognition();
+                
+                recognition.continuous = false;
+                recognition.interimResults = false;
+                recognition.lang = 'es-ES';
+                
+                recognition.onstart = function() {
+                    isListening = true;
+                    document.getElementById('voiceBtn').classList.add('listening');
+                    document.getElementById('voiceIndicator').classList.add('active');
+                    document.getElementById('voiceIndicator').innerHTML = '<i class="fas fa-microphone-slash"></i> <span>Escuchando...</span>';
+                };
+                
+                recognition.onresult = function(event) {
+                    const transcript = event.results[0][0].transcript;
+                    document.getElementById('chatInput').value = transcript;
+                    enviarMensaje();
+                };
+                
+                recognition.onerror = function(event) {
+                    console.error('Error en reconocimiento de voz:', event.error);
+                    showVoiceError('Error en el reconocimiento de voz: ' + event.error);
+                    stopListening();
+                };
+                
+                recognition.onend = function() {
+                    stopListening();
+                };
+            } else {
+                console.error('Reconocimiento de voz no soportado en este navegador');
+                document.getElementById('voiceError').style.display = 'flex';
+                document.getElementById('voiceErrorText').textContent = 'Tu navegador no soporta reconocimiento de voz';
+            }
+        }
+        
+        function startListening() {
+            if (recognition && !isListening) {
+                recognition.start();
+            }
+        }
+        
+        function stopListening() {
+            if (isListening) {
+                isListening = false;
+                document.getElementById('voiceBtn').classList.remove('listening');
+                document.getElementById('voiceIndicator').classList.remove('active');
+                document.getElementById('voiceIndicator').innerHTML = '<i class="fas fa-microphone"></i> <span>Presiona para hablar</span>';
+            }
+        }
+        
+        function showVoiceError(message) {
+            const errorElement = document.getElementById('voiceError');
+            const errorTextElement = document.getElementById('voiceErrorText');
+            
+            errorTextElement.textContent = message;
+            errorElement.style.display = 'flex';
+            
+            setTimeout(() => {
+                errorElement.style.display = 'none';
+            }, 5000);
+        }
+        
+        // Función para hablar texto
+        function speakText(text) {
+            if (!voiceEnabled) return;
+            
+            if ('speechSynthesis' in window) {
+                // Cancelar cualquier speech en curso
+                window.speechSynthesis.cancel();
+                
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.lang = 'es-ES';
+                utterance.rate = 1.0;
+                utterance.pitch = 1.0;
+                
+                utterance.onstart = function() {
+                    console.log('Comenzando a hablar');
+                };
+                
+                utterance.onerror = function(event) {
+                    console.error('Error en síntesis de voz:', event.error);
+                };
+                
+                window.speechSynthesis.speak(utterance);
+            } else {
+                console.error('Síntesis de voz no soportada en este navegador');
+            }
+        }
+        
+        // Función para generar hallazgos clave dinámicos
+        function generarHallazgosClave(datosFiltrados, organismo, año, contrato, calificacion) {
+            const hallazgos = [];
+            
+            // Calcular estadísticas básicas
+            const totalPersonas = datosFiltrados.reduce((sum, d) => sum + d.numPersonas, 0);
+            const remuneracionPromedio = datosFiltrados.length > 0 
+                ? Math.round(datosFiltrados.reduce((sum, d) => sum + d.remuneracion, 0) / datosFiltrados.length)
+                : 0;
+            
+            // Obtener datos para comparaciones
+            const datosGenerales = datosSimulados;
+            const remuneracionGeneral = Math.round(
+                datosGenerales.reduce((sum, d) => sum + d.remuneracion, 0) / datosGenerales.length
+            );
+            
+            // Hallazgo 1: Comparación de remuneración
+            if (organismo !== 'todos' || año !== 'todos' || contrato !== 'todos' || calificacion !== 'todos') {
+                const diferenciaPorcentual = ((remuneracionPromedio - remuneracionGeneral) / remuneracionGeneral * 100).toFixed(1);
+                const comparacion = diferenciaPorcentual > 0 ? 'superior' : 'inferior';
+                const valorAbsoluto = Math.abs(diferenciaPorcentual);
+                
+                hallazgos.push(`La remuneración promedio de <span class="highlight">$${remuneracionPromedio.toLocaleString()}</span> es un ${valorAbsoluto}% ${comparacion} al promedio general del sector público ($${remuneracionGeneral.toLocaleString()}).`);
+            }
+            
+            // Hallazgo 2: Distribución de tipos de contrato
+            if (contrato === 'todos') {
+                const contratosCount = {};
+                datosFiltrados.forEach(d => {
+                    if (!contratosCount[d.tipoContrato]) {
+                        contratosCount[d.tipoContrato] = 0;
+                    }
+                    contratosCount[d.tipoContrato] += d.numPersonas;
+                });
+                
+                const contratoMasComun = Object.keys(contratosCount).reduce((a, b) => 
+                    contratosCount[a] > contratosCount[b] ? a : b
+                );
+                const porcentajeMasComun = ((contratosCount[contratoMasComun] / totalPersonas) * 100).toFixed(1);
+                
+                hallazgos.push(`El tipo de contrato predominante es <span class="highlight">${contratoMasComun}</span> con un ${porcentajeMasComun}% del total de empleados.`);
+            }
+            
+            // Hallazgo 3: Calificación más frecuente
+            if (calificacion === 'todos') {
+                const calificacionesCount = {};
+                datosFiltrados.forEach(d => {
+                    if (!calificacionesCount[d.calificacion]) {
+                        calificacionesCount[d.calificacion] = 0;
+                    }
+                    calificacionesCount[d.calificacion] += d.numPersonas;
+                });
+                
+                const calificacionMasComun = Object.keys(calificacionesCount).reduce((a, b) => 
+                    calificacionesCount[a] > calificacionesCount[b] ? a : b
+                );
+                const porcentajeCalificacion = ((calificacionesCount[calificacionMasComun] / totalPersonas) * 100).toFixed(1);
+                
+                hallazgos.push(`La calificación más representativa es <span class="highlight">${calificacionMasComun}</span> con un ${porcentajeCalificacion}% del personal.`);
+            }
+            
+            // Hallazgo 4: Comparación por tipo de contrato (si hay datos)
+            if (contrato === 'todos' && datosFiltrados.length > 0) {
+                const remuneracionPorContrato = {};
+                datosFiltrados.forEach(d => {
+                    if (!remuneracionPorContrato[d.tipoContrato]) {
+                        remuneracionPorContrato[d.tipoContrato] = { total: 0, count: 0 };
+                    }
+                    remuneracionPorContrato[d.tipoContrato].total += d.remuneracion;
+                    remuneracionPorContrato[d.tipoContrato].count += 1;
+                });
+                
+                const remuneracionesContratos = {};
+                Object.keys(remuneracionPorContrato).forEach(tipo => {
+                    remuneracionesContratos[tipo] = Math.round(
+                        remuneracionPorContrato[tipo].total / remuneracionPorContrato[tipo].count
+                    );
+                });
+                
+                const contratoMayorRemuneracion = Object.keys(remuneracionesContratos).reduce((a, b) => 
+                    remuneracionesContratos[a] > remuneracionesContratos[b] ? a : b
+                );
+                const contratoMenorRemuneracion = Object.keys(remuneracionesContratos).reduce((a, b) => 
+                    remuneracionesContratos[a] < remuneracionesContratos[b] ? a : b
+                );
+                
+                const diferencia = Math.round(
+                    (remuneracionesContratos[contratoMayorRemuneracion] / remuneracionesContratos[contratoMenorRemuneracion] - 1) * 100
+                );
+                
+                hallazgos.push(`Los contratos de <span class="highlight">${contratoMayorRemuneracion}</span> tienen remuneraciones un ${diferencia}% superiores a los de <span class="highlight">${contratoMenorRemuneracion}</span>.`);
+            }
+            
+            // Hallazgo 5: Evolución temporal (si hay múltiples años)
+            if (año === 'todos') {
+                const añosDisponibles = [...new Set(datosFiltrados.map(d => d.año))].sort();
+                if (añosDisponibles.length > 1) {
+                    const remuneracionPorAno = {};
+                    añosDisponibles.forEach(a => {
+                        const datosAño = datosFiltrados.filter(d => d.año === a);
+                        const totalRemuneracion = datosAño.reduce((sum, d) => sum + (d.remuneracion * d.numPersonas), 0);
+                        const totalPersonasAño = datosAño.reduce((sum, d) => sum + d.numPersonas, 0);
+                        remuneracionPorAno[a] = totalRemuneracion / totalPersonasAño;
+                    });
+                    
+                    const primerAño = añosDisponibles[0];
+                    const ultimoAño = añosDisponibles[añosDisponibles.length - 1];
+                    const crecimiento = ((remuneracionPorAno[ultimoAño] / remuneracionPorAno[primerAño] - 1) * 100).toFixed(1);
+                    
+                    hallazgos.push(`Entre ${primerAño} y ${ultimoAño}, la remuneración promedio ha crecido un <span class="highlight">${crecimiento}%</span>, pasando de $${Math.round(remuneracionPorAno[primerAño]).toLocaleString()} a $${Math.round(remuneracionPorAno[ultimoAño]).toLocaleString()}.`);
+                }
+            }
+            
+            // Si no hay suficientes hallazgos, agregar uno genérico
+            if (hallazgos.length === 0) {
+                hallazgos.push(`Se analizan <span class="highlight">${totalPersonas.toLocaleString()}</span> empleados con una remuneración promedio de <span class="highlight">$${remuneracionPromedio.toLocaleString()}</span>.`);
+            }
+            
+            return hallazgos.slice(0, 5); // Limitar a 5 hallazgos
+        }
+        
+        // Funciones de visualización
+        function actualizarEstadisticas() {
+            const organismo = document.getElementById('organismo').value;
+            const año = document.getElementById('anio').value;
+            const contrato = document.getElementById('contrato').value;
+            const calificacion = document.getElementById('calificacion').value;
+            
+            // Actualizar información de filtros activos
+            const organismoTexto = organismo === 'todos' ? 'Todos los organismos' : organismo;
+            const añoTexto = año === 'todos' ? 'Todos los años' : año;
+            const contratoTexto = contrato === 'todos' ? 'Todos los tipos' : contrato;
+            const calificacionTexto = calificacion === 'todos' ? 'Todas las calificaciones' : calificacion;
+            
+            document.getElementById('activeFilters').textContent = 
+                `${organismoTexto}, ${añoTexto}, ${contratoTexto}, ${calificacionTexto}`;
+            
+            // Filtrar datos
+            let datosFiltrados = datosSimulados;
+            
+            if (organismo !== 'todos') {
+                datosFiltrados = datosFiltrados.filter(d => d.organismo === organismo);
+            }
+            
+            if (año !== 'todos') {
+                datosFiltrados = datosFiltrados.filter(d => d.año.toString() === año);
+            }
+            
+            if (contrato !== 'todos') {
+                datosFiltrados = datosFiltrados.filter(d => d.tipoContrato === contrato);
+            }
+            
+            if (calificacion !== 'todos') {
+                datosFiltrados = datosFiltrados.filter(d => d.calificacion === calificacion);
+            }
+            
+            // Calcular estadísticas
+            const totalPersonas = datosFiltrados.reduce((sum, d) => sum + d.numPersonas, 0);
+            const remuneracionPromedio = datosFiltrados.length > 0 
+                ? Math.round(datosFiltrados.reduce((sum, d) => sum + d.remuneracion, 0) / datosFiltrados.length)
+                : 0;
+            const numOrganismos = new Set(datosFiltrados.map(d => d.organismo)).size;
+            const presupuestoTotal = datosFiltrados.reduce((sum, d) => sum + (d.remuneracion * d.numPersonas), 0);
+            
+            // Actualizar estadísticas
+            document.getElementById('stat-personas').textContent = totalPersonas.toLocaleString();
+            document.getElementById('stat-remuneracion').textContent = '$' + remuneracionPromedio.toLocaleString();
+            document.getElementById('stat-organismos').textContent = numOrganismos;
+            document.getElementById('stat-presupuesto').textContent = '$' + (presupuestoTotal / 1000000000).toFixed(1) + 'B';
+            
+            // Actualizar gráficos
+            actualizarGraficos(datosFiltrados);
+            
+            // Actualizar tabla
+            actualizarTabla(datosFiltrados);
+            
+            // Actualizar hallazgos clave
+            actualizarHallazgosClave(datosFiltrados, organismo, año, contrato, calificacion);
+            
+            // Mostrar notificación
+            showNotification('Datos actualizados correctamente');
+        }
+        
+        function actualizarHallazgosClave(datosFiltrados, organismo, año, contrato, calificacion) {
+            const hallazgos = generarHallazgosClave(datosFiltrados, organismo, año, contrato, calificacion);
+            const findingsList = document.getElementById('findingsList');
+            
+            findingsList.innerHTML = '';
+            hallazgos.forEach(hallazgo => {
+                const li = document.createElement('li');
+                li.innerHTML = hallazgo;
+                findingsList.appendChild(li);
+            });
+        }
+        
+        function actualizarGraficos(datos) {
+            // Gráfico de remuneración por organismo
+            const remuneracionPorOrganismo = {};
+            datos.forEach(d => {
+                if (!remuneracionPorOrganismo[d.organismo]) {
+                    remuneracionPorOrganismo[d.organismo] = { total: 0, count: 0 };
+                }
+                remuneracionPorOrganismo[d.organismo].total += d.remuneracion;
+                remuneracionPorOrganismo[d.organismo].count += 1;
+            });
+            
+            const organismosChart = Object.keys(remuneracionPorOrganismo);
+            const remuneracionesChart = organismosChart.map(org => 
+                Math.round(remuneracionPorOrganismo[org].total / remuneracionPorOrganismo[org].count)
+            );
+            
+            const ctxRemuneracion = document.getElementById('remuneracionChart').getContext('2d');
+            
+            if (window.remuneracionChartInstance) {
+                window.remuneracionChartInstance.destroy();
+            }
+            
+            window.remuneracionChartInstance = new Chart(ctxRemuneracion, {
+                type: 'bar',
+                data: {
+                    labels: organismosChart,
+                    datasets: [{
+                        label: 'Remuneración Promedio (CLP)',
+                        data: remuneracionesChart,
+                        backgroundColor: [
+                            'rgba(54, 162, 235, 0.7)',
+                            'rgba(255, 99, 132, 0.7)',
+                            'rgba(255, 206, 86, 0.7)',
+                            'rgba(75, 192, 192, 0.7)',
+                            'rgba(153, 102, 255, 0.7)',
+                            'rgba(255, 159, 64, 0.7)',
+                            'rgba(199, 199, 199, 0.7)',
+                            'rgba(83, 102, 255, 0.7)'
+                        ],
+                        borderColor: [
+                            'rgba(54, 162, 235, 1)',
+                            'rgba(255, 99, 132, 1)',
+                            'rgba(255, 206, 86, 1)',
+                            'rgba(75, 192, 192, 1)',
+                            'rgba(153, 102, 255, 1)',
+                            'rgba(255, 159, 64, 1)',
+                            'rgba(199, 199, 199, 1)',
+                            'rgba(83, 102, 255, 1)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return '$' + (value/1000000).toFixed(1) + 'M';
+                                }
+                            }
+                        }
+                    },
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return '$' + context.parsed.y.toLocaleString();
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+            
+            // Gráfico de tipos de contrato
+            const contratosCount = {};
+            datos.forEach(d => {
+                if (!contratosCount[d.tipoContrato]) {
+                    contratosCount[d.tipoContrato] = 0;
+                }
+                contratosCount[d.tipoContrato] += d.numPersonas;
+            });
+            
+            const ctxContrato = document.getElementById('contratoChart').getContext('2d');
+            
+            if (window.contratoChartInstance) {
+                window.contratoChartInstance.destroy();
+            }
+            
+            window.contratoChartInstance = new Chart(ctxContrato, {
+                type: 'pie',
+                data: {
+                    labels: Object.keys(contratosCount),
+                    datasets: [{
+                        data: Object.values(contratosCount),
+                        backgroundColor: [
+                            'rgba(54, 162, 235, 0.7)',
+                            'rgba(255, 99, 132, 0.7)',
+                            'rgba(255, 206, 86, 0.7)',
+                            'rgba(75, 192, 192, 0.7)'
+                        ],
+                        borderColor: [
+                            'rgba(54, 162, 235, 1)',
+                            'rgba(255, 99, 132, 1)',
+                            'rgba(255, 206, 86, 1)',
+                            'rgba(75, 192, 192, 1)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'right'
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const label = context.label || '';
+                                    const value = context.parsed;
+                                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                    const percentage = Math.round((value / total) * 100);
+                                    return `${label}: ${percentage}%`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+            
+            // Gráfico comparativo
+            const ctxComparativo = document.getElementById('comparativoChart').getContext('2d');
+            
+            if (window.comparativoChartInstance) {
+                window.comparativoChartInstance.destroy();
+            }
+            
+            // Preparar datos para comparativo (evolución por año)
+            const evolucionPorAno = {};
+            años.forEach(año => {
+                const datosAño = datos.filter(d => d.año === año);
+                if (datosAño.length > 0) {
+                    const totalRemuneracion = datosAño.reduce((sum, d) => sum + (d.remuneracion * d.numPersonas), 0);
+                    const totalPersonas = datosAño.reduce((sum, d) => sum + d.numPersonas, 0);
+                    evolucionPorAno[año] = totalRemuneracion / totalPersonas;
+                } else {
+                    evolucionPorAno[año] = 0;
+                }
+            });
+            
+            window.comparativoChartInstance = new Chart(ctxComparativo, {
+                type: 'line',
+                data: {
+                    labels: años,
+                    datasets: [{
+                        label: 'Remuneración Promedio',
+                        data: años.map(año => evolucionPorAno[año]),
+                        backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                        borderColor: 'rgba(54, 162, 235, 1)',
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.4,
+                        pointBackgroundColor: 'rgba(54, 162, 235, 1)',
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 2,
+                        pointRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: false,
+                            ticks: {
+                                callback: function(value) {
+                                    return '$' + (value/1000000).toFixed(1) + 'M';
+                                }
+                            }
+                        }
+                    },
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return '$' + context.parsed.y.toLocaleString();
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        function actualizarTabla(datos) {
+            const tableBody = document.getElementById('tableBody');
+            tableBody.innerHTML = '';
+            
+            // Mostrar solo los primeros 20 resultados para no sobrecargar
+            const datosMostrar = datos.slice(0, 20);
+            
+            datosMostrar.forEach(d => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${d.organismo}</td>
+                    <td>${d.año}</td>
+                    <td>${d.tipoContrato}</td>
+                    <td>${d.calificacion}</td>
+                    <td>${d.numPersonas.toLocaleString()}</td>
+                    <td>$${d.remuneracion.toLocaleString()}</td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+        
+        // Funciones de chatbot
+        function enviarMensaje() {
+            const input = document.getElementById('chatInput');
+            const mensaje = input.value.trim();
+            
+            if (mensaje === '') return;
+            
+            // Agregar mensaje del usuario
+            agregarMensaje(mensaje, 'user', false);
+            
+            // Limpiar input
+            input.value = '';
+            
+            // Simular procesamiento
+            setTimeout(() => {
+                const respuesta = generarRespuesta(mensaje);
+                agregarMensaje(respuesta, 'bot', true);
+            }, 1000);
+        }
+        
+        function agregarMensaje(texto, tipo, speak = false) {
+            const chatMessages = document.getElementById('chatMessages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${tipo}`;
+            
+            const now = new Date();
+            const time = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            
+            let voiceIndicator = '';
+            if (tipo === 'user') {
+                voiceIndicator = '<div class="voice-message"><i class="fas fa-microphone"></i> Mensaje de voz</div>';
+            }
+            
+            messageDiv.innerHTML = `
+                <div class="message-bubble">${texto}</div>
+                ${voiceIndicator}
+                <div class="message-time">${time}</div>
+            `;
+            
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+            
+            // Si es un mensaje del bot, agregar sugerencias
+            if (tipo === 'bot') {
+                const sugerencias = generarSugerencias(texto);
+                const suggestionsContainer = document.createElement('div');
+                suggestionsContainer.className = 'suggestions-container';
+                
+                sugerencias.forEach(sugerencia => {
+                    const suggestionBtn = document.createElement('button');
+                    suggestionBtn.className = 'suggestion-btn';
+                    suggestionBtn.textContent = sugerencia;
+                    suggestionBtn.addEventListener('click', function() {
+                        document.getElementById('chatInput').value = sugerencia;
+                        enviarMensaje();
+                    });
+                    suggestionsContainer.appendChild(suggestionBtn);
+                });
+                
+                messageDiv.appendChild(suggestionsContainer);
+            }
+            
+            // Hablar la respuesta si es del bot y está habilitado
+            if (tipo === 'bot' && speak) {
+                speakText(texto);
+            }
+        }
+        
+        function generarSugerencias(respuesta) {
+            const respuestaLower = respuesta.toLowerCase();
+            
+            if (respuestaLower.includes('remuneracion') || respuestaLower.includes('salario')) {
+                if (respuestaLower.includes('ministerio de salud')) {
+                    return [
+                        "¿Cuál es la remuneración más alta del Ministerio de Salud?",
+                        "¿Cómo se compara con otros ministerios?"
+                    ];
+                } else if (respuestaLower.includes('educacion')) {
+                    return [
+                        "¿Cuál es la distribución salarial en Educación?",
+                        "¿Qué porcentaje de profesionales hay en Educación?"
+                    ];
+                } else {
+                    return [
+                        "¿Cuál es la remuneración más alta del sector público?",
+                        "¿Cómo ha evolucionado la remuneración en los últimos años?"
+                    ];
+                }
+            } else if (respuestaLower.includes('tipo') && respuestaLower.includes('contrato')) {
+                return [
+                    "¿Cuál es el tipo de contrato con mejor remuneración?",
+                    "¿Qué porcentaje de contratos son a honorarios?"
+                ];
+            } else if (respuestaLower.includes('personas') || respuestaLower.includes('trabajadores')) {
+                return [
+                    "¿Cuántas personas trabajan en el Ministerio de Salud?",
+                    "¿Cuál es la distribución de personal por género?"
+                ];
+            } else if (respuestaLower.includes('municipalidad')) {
+                return [
+                    "¿Cuál es la municipalidad con más empleados?",
+                    "¿Cómo se comparan las remuneraciones entre municipalidades?"
+                ];
+            } else if (respuestaLower.includes('tendencia') || respuestaLower.includes('evolucion')) {
+                return [
+                    "¿Qué factores explican la tendencia al alza?",
+                    "¿Se espera que continúe esta tendencia?"
+                ];
+            } else if (respuestaLower.includes('comparar') || respuestaLower.includes('diferencia')) {
+                return [
+                    "¿Cómo se compara el sector público con el privado?",
+                    "¿Qué ministerio tiene la mayor diferencia salarial?"
+                ];
+            } else {
+                return [
+                    "¿Cuál es la remuneración promedio en el sector público?",
+                    "Muestra la distribución de tipos de contrato"
+                ];
+            }
+        }
+        
+        function generarRespuesta(mensaje) {
+            const mensajeLower = mensaje.toLowerCase();
+            
+            // Respuestas predefinidas basadas en palabras clave con datos realistas
+            if (mensajeLower.includes('remuneracion') || mensajeLower.includes('salario')) {
+                if (mensajeLower.includes('ministerio de salud')) {
+                    return "La remuneración promedio en el Ministerio de Salud durante 2023 fue de $1,750,000 CLP, un 5.8% superior al año anterior. Esto se debe principalmente a la alta calificación del personal médico y de salud.";
+                } else if (mensajeLower.includes('educacion')) {
+                    return "La remuneración promedio en el Ministerio de Educación durante 2023 fue de $1,420,000 CLP, con un incremento del 4.2% respecto a 2022. Los docentes de enseñanza media tienen las remuneraciones más altas.";
+                } else {
+                    return "La remuneración promedio en el sector público durante 2023 fue de $1,385,000 CLP. Los directivos tienen remuneraciones 3.2 veces superiores al promedio general.";
+                }
+            } else if (mensajeLower.includes('tipo') && mensajeLower.includes('contrato')) {
+                return "La distribución de tipos de contrato en 2023 fue: Planta (58%), Contrata (22%), Honorarios (15%) y Código del Trabajo (5%). Los contratos de Planta tienen remuneraciones un 35% superiores.";
+            } else if (mensajeLower.includes('personas') || mensajeLower.includes('trabajadores')) {
+                return "En 2023, el sector público chileno empleó a aproximadamente 285,420 personas únicas, un 2.5% más que en 2022. El Ministerio de Educación es el mayor empleador con 65,000 personas.";
+            } else if (mensajeLower.includes('municipalidad')) {
+                return "Las municipalidades concentran el 20% del empleo público, con una remuneración promedio de $1,120,000 CLP y un alto porcentaje de contratos a honorarios (42%).";
+            } else if (mensajeLower.includes('tendencia') || mensajeLower.includes('evolucion')) {
+                return "Desde 2019 se observa una tendencia de crecimiento sostenido en las remuneraciones del sector público, con un incremento acumulado del 18.5% hasta 2023, superando la inflación del período.";
+            } else if (mensajeLower.includes('comparar') || mensajeLower.includes('diferencia')) {
+                return "El Ministerio de Salud muestra la mayor remuneración promedio ($1,750,000), mientras que las municipalidades tienen la menor ($1,120,000). La diferencia es de un 56%.";
+            } else {
+                return "Puedo ayudarte con información sobre remuneraciones, tipos de contrato, distribución de personal y tendencias. Prueba preguntando: '¿Cuál es la remuneración promedio en el Ministerio de Salud?' o 'Muestra la distribución de tipos de contrato'.";
+            }
+        }
+        
+        function showNotification(message, isError = false) {
+            const notification = document.getElementById('notification');
+            const notificationText = document.getElementById('notificationText');
+            
+            notificationText.textContent = message;
+            
+            if (isError) {
+                notification.classList.add('error');
+            } else {
+                notification.classList.remove('error');
+            }
+            
+            notification.classList.add('show');
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 3000);
+        }
+        
+        // Event listeners
+        document.getElementById('organismo').addEventListener('change', actualizarEstadisticas);
+        document.getElementById('anio').addEventListener('change', actualizarEstadisticas);
+        document.getElementById('contrato').addEventListener('change', actualizarEstadisticas);
+        document.getElementById('calificacion').addEventListener('change', actualizarEstadisticas);
+        
+        document.getElementById('sendBtn').addEventListener('click', enviarMensaje);
+        document.getElementById('chatInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                enviarMensaje();
+            }
+        });
+        
+        // Event listeners para voz
+        document.getElementById('voiceBtn').addEventListener('click', function() {
+            if (isListening) {
+                stopListening();
+                if (recognition) {
+                    recognition.stop();
+                }
+            } else {
+                startListening();
+            }
+        });
+        
+        document.getElementById('voiceToggle').addEventListener('change', function() {
+            voiceEnabled = this.checked;
+            
+            if (!voiceEnabled) {
+                // Cancelar cualquier speech en curso
+                if ('speechSynthesis' in window) {
+                    window.speechSynthesis.cancel();
+                }
+            }
+        });
+        
+        // Tabs
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', function() {
+                // Desactivar todas las tabs
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                
+                // Activar la tab seleccionada
+                this.classList.add('active');
+                const tabId = this.getAttribute('data-tab');
+                document.getElementById(tabId).classList.add('active');
+            });
+        });
+        
+        // Sugerencias de chat
+        document.querySelectorAll('.suggestion').forEach(suggestion => {
+            suggestion.addEventListener('click', function() {
+                const text = this.textContent;
+                document.getElementById('chatInput').value = text;
+                enviarMensaje();
+            });
+        });
+        
+        // Inicializar
+        document.addEventListener('DOMContentLoaded', function() {
+            initSpeechRecognition();
+            actualizarEstadisticas();
+        });
+    </script>
+</body>
+</html>
