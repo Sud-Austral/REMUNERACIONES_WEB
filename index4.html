@@ -1188,13 +1188,18 @@
                 datosFiltrados = datosFiltrados.filter(d => d.calificacion === calificacion);
             }
             
-            // Calcular estadísticas
+            // Calcular estadísticas usando el mismo método que la IA
             const totalPersonas = datosFiltrados.reduce((sum, d) => sum + d.personas, 0);
-            const remuneracionPromedio = datosFiltrados.length > 0 
-                ? Math.round(datosFiltrados.reduce((sum, d) => sum + d.remuneracion, 0) / datosFiltrados.length)
-                : 0;
             const numOrganismos = new Set(datosFiltrados.map(d => d.organismo)).size;
-            const presupuestoTotal = datosFiltrados.reduce((sum, d) => sum + (d.remuneracion * d.personas), 0);
+            
+            // Calcular remuneración promedio ponderada por número de personas
+            let totalRemuneracionPonderada = 0;
+            datosFiltrados.forEach(d => {
+                totalRemuneracionPonderada += d.remuneracion * d.personas;
+            });
+            const remuneracionPromedio = totalPersonas > 0 ? Math.round(totalRemuneracionPonderada / totalPersonas) : 0;
+            
+            const presupuestoTotal = totalRemuneracionPonderada;
             
             // Actualizar estadísticas
             document.getElementById('stat-personas').textContent = totalPersonas.toLocaleString();
@@ -1447,8 +1452,159 @@
             });
         }
         
-        // Funciones de chatbot
-        function enviarMensaje() {
+        // Función para obtener respuesta de Gemini Flash 2.5
+        async function obtenerRespuestaGemini(pregunta) {
+            const apiKey = 'AIzaSyCVFFxs6RlhqgskHpZgkZ7Ivug1fm4HJk8';
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`;
+            
+            // Obtener los filtros actuales para contexto
+            const organismo = document.getElementById('organismo').value;
+            const año = document.getElementById('anio').value;
+            const contrato = document.getElementById('contrato').value;
+            const calificacion = document.getElementById('calificacion').value;
+            
+            // Obtener estadísticas actuales para contexto
+            let datosFiltrados = datosProcesados;
+            if (organismo !== 'todos') datosFiltrados = datosFiltrados.filter(d => d.organismo === organismo);
+            if (año !== 'todos') datosFiltrados = datosFiltrados.filter(d => d.año.toString() === año);
+            if (contrato !== 'todos') datosFiltrados = datosFiltrados.filter(d => d.tipo_contrato === contrato);
+            if (calificacion !== 'todos') datosFiltrados = datosFiltrados.filter(d => d.calificacion === calificacion);
+            
+            // Calcular estadísticas generales
+            const totalPersonas = datosFiltrados.reduce((sum, d) => sum + d.personas, 0);
+            
+            // Calcular remuneración promedio ponderada por número de personas
+            let totalRemuneracionPonderada = 0;
+            datosFiltrados.forEach(d => {
+                totalRemuneracionPonderada += d.remuneracion * d.personas;
+            });
+            const remuneracionPromedio = totalPersonas > 0 ? Math.round(totalRemuneracionPonderada / totalPersonas) : 0;
+            
+            const numOrganismos = new Set(datosFiltrados.map(d => d.organismo)).size;
+            const presupuestoTotal = totalRemuneracionPonderada;
+            
+            // Generar resumen por organismo CON LOS MISMOS FILTROS
+            const resumenPorOrganismo = {};
+            datosFiltrados.forEach(d => {
+                if (!resumenPorOrganismo[d.organismo]) {
+                    resumenPorOrganismo[d.organismo] = {
+                        totalPersonas: 0,
+                        totalRemuneracion: 0,
+                        count: 0
+                    };
+                }
+                resumenPorOrganismo[d.organismo].totalPersonas += d.personas;
+                resumenPorOrganismo[d.organismo].totalRemuneracion += d.remuneracion * d.personas;
+                resumenPorOrganismo[d.organismo].count += 1;
+            });
+            
+            // Calcular promedio por organismo
+            Object.keys(resumenPorOrganismo).forEach(org => {
+                const data = resumenPorOrganismo[org];
+                data.remuneracionPromedio = data.totalRemuneracion / data.totalPersonas;
+            });
+            
+            // También generar resumen general (sin filtros) para comparaciones
+            const resumenGeneralPorOrganismo = {};
+            datosProcesados.forEach(d => {
+                if (!resumenGeneralPorOrganismo[d.organismo]) {
+                    resumenGeneralPorOrganismo[d.organismo] = {
+                        totalPersonas: 0,
+                        totalRemuneracion: 0,
+                        count: 0
+                    };
+                }
+                resumenGeneralPorOrganismo[d.organismo].totalPersonas += d.personas;
+                resumenGeneralPorOrganismo[d.organismo].totalRemuneracion += d.remuneracion * d.personas;
+                resumenGeneralPorOrganismo[d.organismo].count += 1;
+            });
+            
+            Object.keys(resumenGeneralPorOrganismo).forEach(org => {
+                const data = resumenGeneralPorOrganismo[org];
+                data.remuneracionPromedio = data.totalRemuneracion / data.totalPersonas;
+            });
+            
+            // Tomar una muestra de los datos crudos
+            const muestraDatos = datosProcesados.slice(0, 5);
+            
+            // Construir el prompt con contexto detallado
+            const prompt = `Eres un asistente experto en análisis de datos de empleo público en Chile. 
+
+Filtros aplicados actualmente:
+- Organismo: ${organismo === 'todos' ? 'Todos los organismos' : organismo}
+- Año: ${año === 'todos' ? 'Todos los años' : año}
+- Tipo de Contrato: ${contrato === 'todos' ? 'Todos los tipos' : contrato}
+- Calificación: ${calificacion === 'todos' ? 'Todas las calificaciones' : calificacion}
+
+Estadísticas generales con filtros aplicados:
+- Total de personas: ${totalPersonas.toLocaleString()}
+- Remuneración promedio: $${remuneracionPromedio.toLocaleString()}
+- Número de organismos: ${numOrganismos}
+- Presupuesto total: $${(presupuestoTotal / 1000000000).toFixed(1)} mil millones
+
+DATOS FILTRADOS POR ORGANISMO (con los mismos filtros aplicados):
+${Object.keys(resumenPorOrganismo).map(org => 
+    `- ${org}: ${resumenPorOrganismo[org].totalPersonas.toLocaleString()} personas, remuneración promedio $${Math.round(resumenPorOrganismo[org].remuneracionPromedio).toLocaleString()}`
+).join('\n')}
+
+DATOS GENERALES POR ORGANISMO (sin filtros, todos los años):
+${Object.keys(resumenGeneralPorOrganismo).map(org => 
+    `- ${org}: ${resumenGeneralPorOrganismo[org].totalPersonas.toLocaleString()} personas, remuneración promedio $${Math.round(resumenGeneralPorOrganismo[org].remuneracionPromedio).toLocaleString()}`
+).join('\n')}
+
+Muestra de datos crudos (estructura de los datos):
+${muestraDatos.map(d => 
+    `- Organismo: ${d.organismo}, Año: ${d.año}, Tipo Contrato: ${d.tipo_contrato}, Calificación: ${d.calificacion}, Personas: ${d.personas}, Remuneración Promedio: $${d.remuneracion.toLocaleString()}`
+).join('\n')}
+
+El usuario pregunta: "${pregunta}"
+
+Instrucciones:
+1. Si la pregunta es sobre un organismo específico y se han aplicado filtros (especialmente por año), usa los DATOS FILTRADOS POR ORGANISMO para responder.
+2. Si la pregunta requiere comparar con datos históricos (otros años) o sin filtros, usa los DATOS GENERALES POR ORGANISMO.
+3. Responde de manera clara y concisa.
+4. Si la pregunta requiere información que no está en los datos, indícalo amablemente.
+5. Incluye valores numéricos específicos cuando sea posible.`;
+
+            const requestBody = {
+                contents: [{
+                    parts: [{
+                        text: prompt
+                    }]
+                }]
+            };
+
+            try {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(requestBody)
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Error en la petición: ${response.status} ${response.statusText}`);
+                }
+
+                const data = await response.json();
+                
+                // Extraer la respuesta de Gemini
+                if (data.candidates && data.candidates.length > 0 && 
+                    data.candidates[0].content && data.candidates[0].content.parts && 
+                    data.candidates[0].content.parts.length > 0) {
+                    return data.candidates[0].content.parts[0].text;
+                } else {
+                    throw new Error('Respuesta inesperada de la API de Gemini');
+                }
+            } catch (error) {
+                console.error('Error al llamar a la API de Gemini:', error);
+                return 'Lo siento, ocurrió un error al procesar tu pregunta. Por favor, intenta nuevamente más tarde.';
+            }
+        }
+        
+        // Modificar la función enviarMensaje para usar Gemini
+        async function enviarMensaje() {
             const input = document.getElementById('chatInput');
             const mensaje = input.value.trim();
             
@@ -1460,13 +1616,47 @@
             // Limpiar input
             input.value = '';
             
-            // Simular procesamiento
-            setTimeout(() => {
-                const respuesta = generarRespuesta(mensaje);
-                agregarMensaje(respuesta, 'bot', true);
-            }, 1000);
+            // Mostrar indicador de que se está procesando
+            const processingMessage = "Procesando tu pregunta...";
+            const botMessageElement = agregarMensaje(processingMessage, 'bot', false);
+            
+            try {
+                // Obtener respuesta de Gemini
+                const respuesta = await obtenerRespuestaGemini(mensaje);
+                
+                // Actualizar el mensaje del bot con la respuesta real
+                botMessageElement.querySelector('.message-bubble').textContent = respuesta;
+                
+                // Si está habilitada la voz, hablar la respuesta
+                if (voiceEnabled) {
+                    speakText(respuesta);
+                }
+                
+                // Agregar sugerencias
+                const sugerencias = generarSugerencias(respuesta);
+                const suggestionsContainer = document.createElement('div');
+                suggestionsContainer.className = 'suggestions-container';
+                
+                sugerencias.forEach(sugerencia => {
+                    const suggestionBtn = document.createElement('button');
+                    suggestionBtn.className = 'suggestion-btn';
+                    suggestionBtn.textContent = sugerencia;
+                    suggestionBtn.addEventListener('click', function() {
+                        document.getElementById('chatInput').value = sugerencia;
+                        enviarMensaje();
+                    });
+                    suggestionsContainer.appendChild(suggestionBtn);
+                });
+                
+                botMessageElement.appendChild(suggestionsContainer);
+                
+            } catch (error) {
+                console.error('Error en enviarMensaje:', error);
+                botMessageElement.querySelector('.message-bubble').textContent = 'Lo siento, ocurrió un error al procesar tu pregunta. Por favor, intenta nuevamente más tarde.';
+            }
         }
         
+        // Modificar la función agregarMensaje para devolver el elemento del mensaje
         function agregarMensaje(texto, tipo, speak = false) {
             const chatMessages = document.getElementById('chatMessages');
             const messageDiv = document.createElement('div');
@@ -1489,8 +1679,8 @@
             chatMessages.appendChild(messageDiv);
             chatMessages.scrollTop = chatMessages.scrollHeight;
             
-            // Si es un mensaje del bot, agregar sugerencias
-            if (tipo === 'bot') {
+            // Si es un mensaje del bot, agregar sugerencias (solo si no es un mensaje de procesamiento)
+            if (tipo === 'bot' && texto !== "Procesando tu pregunta...") {
                 const sugerencias = generarSugerencias(texto);
                 const suggestionsContainer = document.createElement('div');
                 suggestionsContainer.className = 'suggestions-container';
@@ -1513,6 +1703,8 @@
             if (tipo === 'bot' && speak) {
                 speakText(texto);
             }
+            
+            return messageDiv; // Devolvemos el elemento del mensaje
         }
         
         function generarSugerencias(respuesta) {
@@ -1565,33 +1757,6 @@
                     "¿Cuál es la remuneración promedio en el sector público?",
                     "Muestra la distribución de tipos de contrato"
                 ];
-            }
-        }
-        
-        function generarRespuesta(mensaje) {
-            const mensajeLower = mensaje.toLowerCase();
-            
-            // Respuestas predefinidas basadas en palabras clave con datos realistas
-            if (mensajeLower.includes('remuneracion') || mensajeLower.includes('salario')) {
-                if (mensajeLower.includes('ministerio de salud')) {
-                    return "La remuneración promedio en el Ministerio de Salud durante 2023 fue de $1,750,000 CLP, un 5.8% superior al año anterior. Esto se debe principalmente a la alta calificación del personal médico y de salud.";
-                } else if (mensajeLower.includes('educacion')) {
-                    return "La remuneración promedio en el Ministerio de Educación durante 2023 fue de $1,420,000 CLP, con un incremento del 4.2% respecto a 2022. Los docentes de enseñanza media tienen las remuneraciones más altas.";
-                } else {
-                    return "La remuneración promedio en el sector público durante 2023 fue de $1,385,000 CLP. Los directivos tienen remuneraciones 3.2 veces superiores al promedio general.";
-                }
-            } else if (mensajeLower.includes('tipo') && mensajeLower.includes('contrato')) {
-                return "La distribución de tipos de contrato en 2023 fue: Planta (58%), Contrata (22%), Honorarios (15%) y Código del Trabajo (5%). Los contratos de Planta tienen remuneraciones un 35% superiores.";
-            } else if (mensajeLower.includes('personas') || mensajeLower.includes('trabajadores')) {
-                return "En 2023, el sector público chileno empleó a aproximadamente 285,420 personas únicas, un 2.5% más que en 2022. El Ministerio de Educación es el mayor empleador con 65,000 personas.";
-            } else if (mensajeLower.includes('municipalidad')) {
-                return "Las municipalidades concentran el 20% del empleo público, con una remuneración promedio de $1,120,000 CLP y un alto porcentaje de contratos a honorarios (42%).";
-            } else if (mensajeLower.includes('tendencia') || mensajeLower.includes('evolucion')) {
-                return "Desde 2019 se observa una tendencia de crecimiento sostenido en las remuneraciones del sector público, con un incremento acumulado del 18.5% hasta 2023, superando la inflación del período.";
-            } else if (mensajeLower.includes('comparar') || mensajeLower.includes('diferencia')) {
-                return "El Ministerio de Salud muestra la mayor remuneración promedio ($1,750,000), mientras que las municipalidades tienen la menor ($1,120,000). La diferencia es de un 56%.";
-            } else {
-                return "Puedo ayudarte con información sobre remuneraciones, tipos de contrato, distribución de personal y tendencias. Prueba preguntando: '¿Cuál es la remuneración promedio en el Ministerio de Salud?' o 'Muestra la distribución de tipos de contrato'.";
             }
         }
         
