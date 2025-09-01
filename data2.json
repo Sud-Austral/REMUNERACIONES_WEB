@@ -1,4 +1,18 @@
-{
+{"metadatos": {
+  "organismos": [
+    "Ministerio de Salud",
+    "Ministerio de Educación",
+    "Municipalidad de Santiago",
+    "Servicio de Impuestos Internos",
+    "Carabineros de Chile",
+    "Gendarmería de Chile",
+    "Municipalidad de Las Condes",
+    "Ministerio de Hacienda"
+  ],
+  "tipos_contrato": ["Planta", "Contrata", "Honorarios", "Código del Trabajo"],
+  "calificaciones": ["Profesional", "Técnico", "Administrativo", "Auxiliar", "Directivo"],
+  "años": [2018, 2019, 2020, 2021, 2022, 2023]
+},
   "datos": [
     {
       "organismo": "Ministerio de Salud",
