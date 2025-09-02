@@ -1530,41 +1530,41 @@
             // Construir el prompt con contexto detallado
             const prompt = `Eres un asistente experto en análisis de datos de empleo público en Chile. 
 
-Filtros aplicados actualmente:
-- Organismo: ${organismo === 'todos' ? 'Todos los organismos' : organismo}
-- Año: ${año === 'todos' ? 'Todos los años' : año}
-- Tipo de Contrato: ${contrato === 'todos' ? 'Todos los tipos' : contrato}
-- Calificación: ${calificacion === 'todos' ? 'Todas las calificaciones' : calificacion}
+            Filtros aplicados actualmente:
+            - Organismo: ${organismo === 'todos' ? 'Todos los organismos' : organismo}
+            - Año: ${año === 'todos' ? 'Todos los años' : año}
+            - Tipo de Contrato: ${contrato === 'todos' ? 'Todos los tipos' : contrato}
+            - Calificación: ${calificacion === 'todos' ? 'Todas las calificaciones' : calificacion}
 
-Estadísticas generales con filtros aplicados:
-- Total de personas: ${totalPersonas.toLocaleString()}
-- Remuneración promedio: $${remuneracionPromedio.toLocaleString()}
-- Número de organismos: ${numOrganismos}
-- Presupuesto total: $${(presupuestoTotal / 1000000000).toFixed(1)} mil millones
+            Estadísticas generales con filtros aplicados:
+            - Total de personas: ${totalPersonas.toLocaleString()}
+            - Remuneración promedio: $${remuneracionPromedio.toLocaleString()}
+            - Número de organismos: ${numOrganismos}
+            - Presupuesto total: $${(presupuestoTotal / 1000000000).toFixed(1)} mil millones
 
-DATOS FILTRADOS POR ORGANISMO (con los mismos filtros aplicados):
-${Object.keys(resumenPorOrganismo).map(org => 
-    `- ${org}: ${resumenPorOrganismo[org].totalPersonas.toLocaleString()} personas, remuneración promedio $${Math.round(resumenPorOrganismo[org].remuneracionPromedio).toLocaleString()}`
-).join('\n')}
+            DATOS FILTRADOS POR ORGANISMO (con los mismos filtros aplicados):
+            ${Object.keys(resumenPorOrganismo).map(org => 
+                `- ${org}: ${resumenPorOrganismo[org].totalPersonas.toLocaleString()} personas, remuneración promedio $${Math.round(resumenPorOrganismo[org].remuneracionPromedio).toLocaleString()}`
+            ).join('\n')}
 
-DATOS GENERALES POR ORGANISMO (sin filtros, todos los años):
-${Object.keys(resumenGeneralPorOrganismo).map(org => 
-    `- ${org}: ${resumenGeneralPorOrganismo[org].totalPersonas.toLocaleString()} personas, remuneración promedio $${Math.round(resumenGeneralPorOrganismo[org].remuneracionPromedio).toLocaleString()}`
-).join('\n')}
+            DATOS GENERALES POR ORGANISMO (sin filtros, todos los años):
+            ${Object.keys(resumenGeneralPorOrganismo).map(org => 
+                `- ${org}: ${resumenGeneralPorOrganismo[org].totalPersonas.toLocaleString()} personas, remuneración promedio $${Math.round(resumenGeneralPorOrganismo[org].remuneracionPromedio).toLocaleString()}`
+            ).join('\n')}
 
-Muestra de datos crudos (estructura de los datos):
-${muestraDatos.map(d => 
-    `- Organismo: ${d.organismo}, Año: ${d.año}, Tipo Contrato: ${d.tipo_contrato}, Calificación: ${d.calificacion}, Personas: ${d.personas}, Remuneración Promedio: $${d.remuneracion.toLocaleString()}`
-).join('\n')}
+            Muestra de datos crudos (estructura de los datos):
+            ${muestraDatos.map(d => 
+                `- Organismo: ${d.organismo}, Año: ${d.año}, Tipo Contrato: ${d.tipo_contrato}, Calificación: ${d.calificacion}, Personas: ${d.personas}, Remuneración Promedio: $${d.remuneracion.toLocaleString()}`
+            ).join('\n')}
 
-El usuario pregunta: "${pregunta}"
+            El usuario pregunta: "${pregunta}"
 
-Instrucciones:
-1. Si la pregunta es sobre un organismo específico y se han aplicado filtros (especialmente por año), usa los DATOS FILTRADOS POR ORGANISMO para responder.
-2. Si la pregunta requiere comparar con datos históricos (otros años) o sin filtros, usa los DATOS GENERALES POR ORGANISMO.
-3. Responde de manera clara y concisa.
-4. Si la pregunta requiere información que no está en los datos, indícalo amablemente.
-5. Incluye valores numéricos específicos cuando sea posible.`;
+            Instrucciones:
+            1. Si la pregunta es sobre un organismo específico y se han aplicado filtros (especialmente por año), usa los DATOS FILTRADOS POR ORGANISMO para responder.
+            2. Si la pregunta requiere comparar con datos históricos (otros años) o sin filtros, usa los DATOS GENERALES POR ORGANISMO.
+            3. Responde de manera clara y concisa.
+            4. Si la pregunta requiere información que no está en los datos, indícalo amablemente.
+            5. Incluye valores numéricos específicos cuando sea posible.`;
 
             const requestBody = {
                 contents: [{

@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aplicación de Chat</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #1a1a2e; /* Fondo oscuro */
+        }
+        .chat-container {
+            max-width: 640px;
+            margin: auto;
+            height: calc(100vh - 4rem);
+        }
+        .chat-log {
+            overflow-y: auto;
+            flex-grow: 1;
+        }
+        
+        /* Estilos para el indicador de carga */
+        .loading-message {
+            background-color: #3b436b !important;
+            color: #a0aec0 !important;
+        }
+
+        .animate-pulse {
+            animation: pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+
+        .delay-75 {
+            animation-delay: 0.75s;
+        }
+
+        .delay-150 {
+            animation-delay: 1.5s;
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: .5;
+            }
+        }
+    </style>
+</head>
+<body class="p-4 flex items-center justify-center">
+    <div class="chat-container flex flex-col bg-[#2e344e] shadow-2xl rounded-2xl overflow-hidden">
+        
+        <!-- Encabezado del chat -->
+        <header class="bg-[#3b436b] p-4 text-white text-center rounded-t-2xl">
+            <h1 class="text-xl font-bold">Chatbot Gemini</h1>
+        </header>
+
+        <!-- Registro de mensajes -->
+        <div id="chat-log" class="chat-log p-6 space-y-4">
+            <!-- Los mensajes se agregarán aquí dinámicamente -->
+        </div>
+
+        <!-- Área de entrada de mensajes -->
+        <div class="p-4 bg-[#3b436b] flex items-center gap-2 rounded-b-2xl">
+            <input
+                type="text"
+                id="message-input"
+                placeholder="Escribe tu mensaje..."
+                class="flex-grow p-3 rounded-xl bg-[#2e344e] text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#6c63ff] transition-all"
+            >
+            <button
+                id="send-button"
+                class="bg-[#6c63ff] text-white p-3 rounded-xl font-bold hover:bg-[#5249e0] transition-colors shadow-lg"
+            >
+                Enviar
+            </button>
+        </div>
+    </div>
+
+    <script src="data.js"></script>
+    <script src="response.js"></script>
+
+    <script>
+        console.log(data)
+        // Definiciones de variables para elementos del DOM
+        const chatLog = document.getElementById('chat-log');
+        const messageInput = document.getElementById('message-input');
+        const sendButton = document.getElementById('send-button');
+
+        // Función para agregar un mensaje al registro del chat
+        function agregarMensaje(texto, remitente, esCarga = false) {
+            const mensajeDiv = document.createElement('div');
+            // Clases base para el estilo del mensaje
+            mensajeDiv.classList.add('p-3', 'rounded-xl', 'max-w-[80%]', 'shadow-md');
+
+            if (remitente === 'user') {
+                // Estilo para los mensajes del usuario
+                mensajeDiv.classList.add('bg-[#6c63ff]', 'text-white', 'self-end', 'ml-auto');
+            } else {
+                // Estilo para los mensajes del chatbot
+                mensajeDiv.classList.add('bg-[#5249e0]', 'text-white', 'self-start', 'mr-auto');
+                
+                // Si es un mensaje de carga, agregar una clase especial y animación
+                if (esCarga) {
+                    mensajeDiv.classList.add('loading-message');
+                    mensajeDiv.innerHTML = `
+                        <span class="flex items-center">
+                            <span class="animate-pulse">●</span>
+                            <span class="animate-pulse delay-75">●</span>
+                            <span class="animate-pulse delay-150">●</span>
+                            <span class="ml-2">Procesando...</span>
+                        </span>
+                    `;
+                }
+            }
+            
+            if (!esCarga) {
+                mensajeDiv.innerText = texto;
+            }
+            
+            chatLog.appendChild(mensajeDiv);
+            
+            // Desplazar el chat hasta la parte inferior
+            chatLog.scrollTop = chatLog.scrollHeight;
+            
+            // Devolver el elemento del mensaje para poder actualizarlo después
+            return mensajeDiv;
+        }
+
+        /**
+         * @param {string} prompt - El mensaje del usuario
+         * @returns {string} - La respuesta del chatbot
+         * TODO: Implementa tu lógica para obtener la respuesta aquí.
+         * Esta es una función de ejemplo que simplemente devuelve un texto fijo.
+         */
+        
+        // Función para manejar el envío de mensajes
+        async function enviarMensaje() {
+            const prompt = messageInput.value.trim();
+            if (prompt === '') return;
+
+            // Mostrar el mensaje del usuario
+            agregarMensaje(prompt, 'user');
+
+            // Agregar mensaje de carga
+            const mensajeCarga = agregarMensaje("", 'bot', true);
+
+            try {
+                // Llamar a la función para obtener la respuesta
+                const respuesta = await obtenerRespuesta(prompt);
+                
+                // Reemplazar el mensaje de carga con la respuesta real
+                mensajeCarga.classList.remove('loading-message');
+                mensajeCarga.innerHTML = respuesta; // Usar innerText si la respuesta es solo texto
+                
+            } catch (error) {
+                // Manejar errores de la API
+                mensajeCarga.classList.remove('loading-message');
+                mensajeCarga.innerText = "Lo siento, ocurrió un error al procesar tu solicitud.";
+            }
+
+            // Limpiar el campo de entrada
+            messageInput.value = '';
+        }
+
+        // Escuchar el clic en el botón de "Enviar"
+        sendButton.addEventListener('click', enviarMensaje);
+
+        // Escuchar la tecla "Enter" en el campo de entrada
+        messageInput.addEventListener('keypress', (event) => {
+            if (event.key === 'Enter') {
+                enviarMensaje();
+            }
+        });
+    </script>
+</body>
+</html>

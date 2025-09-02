@@ -1,0 +1,2240 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DataBot IA - Plataforma de Datos Inteligentes</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --primary: #2A5B8C;
+            --secondary: #4CAF50;
+            --light: #F5F7FA;
+            --dark: #333;
+            --gray: #6c757d;
+            --white: #fff;
+            --shadow: 0 4px 6px rgba(0,0,0,0.1);
+            --transition: all 0.3s ease;
+            --expert: #8e44ad;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Open Sans', sans-serif;
+            line-height: 1.6;
+            color: var(--dark);
+            background-color: var(--light);
+        }
+        
+        h1, h2, h3, h4, h5, h6 {
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 600;
+        }
+        
+        .container {
+            width: 90%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 15px;
+        }
+        
+        /* Header */
+        header {
+            background-color: var(--white);
+            box-shadow: var(--shadow);
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 1000;
+        }
+        
+        .header-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 0;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+        
+        .logo i {
+            margin-right: 10px;
+            color: var(--secondary);
+        }
+        
+        nav ul {
+            display: flex;
+            list-style: none;
+        }
+        
+        nav ul li {
+            margin-left: 25px;
+        }
+        
+        nav ul li a {
+            text-decoration: none;
+            color: var(--dark);
+            font-weight: 600;
+            transition: var(--transition);
+        }
+        
+        nav ul li a:hover {
+            color: var(--primary);
+        }
+        
+        .expert-btn {
+            background-color: var(--expert);
+            color: var(--white);
+            padding: 8px 20px;
+            border-radius: 30px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: var(--transition);
+        }
+        
+        .expert-btn:hover {
+            background-color: #7d3c98;
+            transform: translateY(-2px);
+        }
+        
+        /* Hero Section */
+        .hero {
+            background: linear-gradient(135deg, var(--primary), #1e3d5f);
+            color: var(--white);
+            padding: 150px 0 80px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .hero::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url('https://images.unsplash.com/photo-1551288049-bebda4e38f71?ixlib=rb-4.0.3&auto=format&fit=crop&w=1950&q=80');
+            background-size: cover;
+            background-position: center;
+            opacity: 0.2;
+            z-index: -1;
+        }
+        
+        .hero h1 {
+            font-size: 3rem;
+            margin-bottom: 20px;
+            font-weight: 700;
+        }
+        
+        .hero p {
+            font-size: 1.2rem;
+            max-width: 700px;
+            margin: 0 auto 30px;
+        }
+        
+        .cta-button {
+            display: inline-block;
+            background-color: var(--secondary);
+            color: var(--white);
+            padding: 15px 40px;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 1.1rem;
+            transition: var(--transition);
+            box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
+        }
+        
+        .cta-button:hover {
+            background-color: #3d8b40;
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(76, 175, 80, 0.4);
+        }
+        
+        /* Chatbots Section */
+        .chatbots {
+            padding: 80px 0;
+            background-color: var(--white);
+        }
+        
+        .section-title {
+            text-align: center;
+            margin-bottom: 50px;
+        }
+        
+        .section-title h2 {
+            font-size: 2.5rem;
+            color: var(--primary);
+            margin-bottom: 15px;
+        }
+        
+        .section-title p {
+            color: var(--gray);
+            max-width: 700px;
+            margin: 0 auto;
+        }
+        
+        .search-container {
+            max-width: 600px;
+            margin: 0 auto 40px;
+            position: relative;
+        }
+        
+        .search-input {
+            width: 100%;
+            padding: 15px 50px 15px 20px;
+            border: 2px solid #e0e0e0;
+            border-radius: 50px;
+            font-size: 1rem;
+            transition: var(--transition);
+        }
+        
+        .search-input:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+        
+        .search-btn {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            background-color: var(--primary);
+            color: var(--white);
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+        
+        .search-btn:hover {
+            background-color: #1e3d5f;
+        }
+        
+        .filter-container {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 40px;
+            flex-wrap: wrap;
+        }
+        
+        .filter-btn {
+            background-color: var(--light);
+            border: none;
+            padding: 10px 20px;
+            margin: 0 5px 10px;
+            border-radius: 30px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: var(--transition);
+        }
+        
+        .filter-btn.active, .filter-btn:hover {
+            background-color: var(--primary);
+            color: var(--white);
+        }
+        
+        .chatbot-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 30px;
+        }
+        
+        .chatbot-card {
+            background-color: var(--white);
+            border-radius: 15px;
+            box-shadow: var(--shadow);
+            overflow: hidden;
+            transition: var(--transition);
+            cursor: pointer;
+        }
+        
+        .chatbot-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+        
+        .card-header {
+            background-color: var(--primary);
+            color: var(--white);
+            padding: 20px;
+            text-align: center;
+        }
+        
+        .card-header i {
+            font-size: 3rem;
+            margin-bottom: 15px;
+        }
+        
+        .card-body {
+            padding: 25px;
+        }
+        
+        .card-body h3 {
+            font-size: 1.5rem;
+            margin-bottom: 15px;
+            color: var(--primary);
+        }
+        
+        .card-body p {
+            color: var(--gray);
+            margin-bottom: 20px;
+        }
+        
+        .card-stats {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+        
+        .stat-item {
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+        
+        .stat-label {
+            font-size: 0.8rem;
+            color: var(--gray);
+        }
+        
+        .card-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 25px 25px;
+        }
+        
+        .chat-btn {
+            background-color: var(--secondary);
+            color: var(--white);
+            padding: 8px 20px;
+            border-radius: 30px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: var(--transition);
+        }
+        
+        .chat-btn:hover {
+            background-color: #3d8b40;
+        }
+        
+        .expert-chat-btn {
+            background-color: var(--expert);
+            color: var(--white);
+            padding: 8px 20px;
+            border-radius: 30px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: var(--transition);
+            margin-left: 10px;
+        }
+        
+        .expert-chat-btn:hover {
+            background-color: #7d3c98;
+        }
+        
+        .update-badge {
+            background-color: var(--light);
+            color: var(--gray);
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+        }
+        
+        /* Examples Section */
+        .examples {
+            padding: 80px 0;
+            background-color: var(--light);
+        }
+        
+        .examples-container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        
+        .example-card {
+            background-color: var(--white);
+            border-radius: 15px;
+            box-shadow: var(--shadow);
+            padding: 30px;
+            margin-bottom: 30px;
+            position: relative;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+        
+        .example-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 15px rgba(0,0,0,0.1);
+        }
+        
+        .example-card::before {
+            content: """;
+            position: absolute;
+            top: 10px;
+            left: 20px;
+            font-size: 5rem;
+            color: rgba(42, 91, 140, 0.1);
+            font-family: serif;
+        }
+        
+        .question {
+            font-weight: 600;
+            color: var(--primary);
+            margin-bottom: 15px;
+            font-size: 1.1rem;
+        }
+        
+        .answer {
+            color: var(--dark);
+            padding-left: 20px;
+            border-left: 3px solid var(--secondary);
+        }
+        
+        .chart-container {
+            background-color: var(--white);
+            border-radius: 10px;
+            margin-top: 15px;
+            padding: 15px;
+            height: 200px;
+            position: relative;
+        }
+        
+        .chart-source {
+            text-align: right;
+            font-size: 0.8rem;
+            color: var(--gray);
+            margin-top: 5px;
+            font-style: italic;
+        }
+        
+        /* Transparency Section */
+        .transparency {
+            padding: 50px 0;
+            background-color: var(--primary);
+            color: var(--white);
+            text-align: center;
+        }
+        
+        .transparency-container {
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+        }
+        
+        .transparency-item {
+            flex: 1;
+            min-width: 200px;
+            margin: 15px;
+        }
+        
+        .transparency-item i {
+            font-size: 2.5rem;
+            margin-bottom: 15px;
+            color: var(--secondary);
+        }
+        
+        .transparency-item h3 {
+            font-size: 1.2rem;
+            margin-bottom: 10px;
+        }
+        
+        /* Footer */
+        footer {
+            background-color: var(--dark);
+            color: var(--white);
+            padding: 60px 0 30px;
+        }
+        
+        .footer-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+        
+        .footer-col h3 {
+            font-size: 1.2rem;
+            margin-bottom: 20px;
+            position: relative;
+            padding-bottom: 10px;
+        }
+        
+        .footer-col h3::after {
+            content: "";
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 50px;
+            height: 2px;
+            background-color: var(--secondary);
+        }
+        
+        .footer-col ul {
+            list-style: none;
+        }
+        
+        .footer-col ul li {
+            margin-bottom: 10px;
+        }
+        
+        .footer-col ul li a {
+            color: #bbb;
+            text-decoration: none;
+            transition: var(--transition);
+        }
+        
+        .footer-col ul li a:hover {
+            color: var(--white);
+            padding-left: 5px;
+        }
+        
+        .social-links {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .social-links a {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            color: var(--white);
+            transition: var(--transition);
+        }
+        
+        .social-links a:hover {
+            background-color: var(--secondary);
+            transform: translateY(-3px);
+        }
+        
+        .copyright {
+            text-align: center;
+            padding-top: 30px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            color: #bbb;
+            font-size: 0.9rem;
+        }
+        
+        /* Chat Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 2000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            overflow: auto;
+        }
+        
+        .modal-content {
+            background-color: var(--white);
+            margin: 5% auto;
+            padding: 0;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 800px;
+            height: 80vh;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        
+        .modal-header {
+            padding: 20px;
+            background-color: var(--primary);
+            color: var(--white);
+            border-radius: 15px 15px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .modal-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+        
+        .close {
+            color: var(--white);
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+        
+        .close:hover {
+            color: #ddd;
+        }
+        
+        .modal-body {
+            flex: 1;
+            display: flex;
+            overflow: hidden;
+        }
+        
+        .chat-sidebar {
+            width: 30%;
+            background-color: var(--light);
+            padding: 20px;
+            overflow-y: auto;
+            border-right: 1px solid #e0e0e0;
+        }
+        
+        .sidebar-title {
+            font-size: 1.2rem;
+            margin-bottom: 15px;
+            color: var(--primary);
+        }
+        
+        .faq-list {
+            list-style: none;
+        }
+        
+        .faq-item {
+            margin-bottom: 10px;
+            padding: 10px;
+            background-color: var(--white);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+        
+        .faq-item:hover {
+            background-color: #e8f4f8;
+        }
+        
+        .chat-main {
+            width: 70%;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .chat-messages {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            background-color: var(--white);
+        }
+        
+        .message {
+            margin-bottom: 20px;
+            display: flex;
+        }
+        
+        .message.user {
+            justify-content: flex-end;
+        }
+        
+        .message-content {
+            max-width: 80%;
+            padding: 15px;
+            border-radius: 15px;
+            position: relative;
+        }
+        
+        .message.bot .message-content {
+            background-color: var(--light);
+            border-top-left-radius: 0;
+        }
+        
+        .message.user .message-content {
+            background-color: var(--primary);
+            color: var(--white);
+            border-top-right-radius: 0;
+        }
+        
+        .message-time {
+            font-size: 0.7rem;
+            color: var(--gray);
+            margin-top: 5px;
+            text-align: right;
+        }
+        
+        .message.user .message-time {
+            color: rgba(255,255,255,0.7);
+        }
+        
+        .message-source {
+            font-size: 0.7rem;
+            color: var(--gray);
+            font-style: italic;
+            margin-top: 5px;
+            text-align: right;
+        }
+        
+        .message.user .message-source {
+            color: rgba(255,255,255,0.7);
+        }
+        
+        .chart-placeholder {
+            background-color: var(--light);
+            border-radius: 10px;
+            margin-top: 10px;
+            padding: 15px;
+            height: 200px;
+            position: relative;
+        }
+        
+        .chat-input-container {
+            padding: 20px;
+            border-top: 1px solid #e0e0e0;
+            display: flex;
+        }
+        
+        .chat-input {
+            flex: 1;
+            padding: 12px 20px;
+            border: 1px solid #e0e0e0;
+            border-radius: 30px;
+            font-size: 1rem;
+            margin-right: 10px;
+        }
+        
+        .chat-input:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+        
+        .send-btn {
+            background-color: var(--primary);
+            color: var(--white);
+            border: none;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .send-btn:hover {
+            background-color: #1e3d5f;
+        }
+        
+        /* Expert Access Modal */
+        .expert-modal-content {
+            background-color: var(--white);
+            margin: 2% auto;
+            padding: 0;
+            border-radius: 15px;
+            width: 95%;
+            max-width: 1200px;
+            height: 90vh;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        
+        .expert-modal-header {
+            padding: 20px 30px;
+            background-color: var(--expert);
+            color: var(--white);
+            border-radius: 15px 15px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .expert-modal-title {
+            font-size: 1.8rem;
+            font-weight: 600;
+        }
+        
+        .expert-modal-body {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        
+        .expert-tabs {
+            display: flex;
+            background-color: var(--light);
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        .expert-tab {
+            padding: 15px 25px;
+            cursor: pointer;
+            font-weight: 600;
+            color: var(--gray);
+            border-bottom: 3px solid transparent;
+            transition: var(--transition);
+        }
+        
+        .expert-tab.active {
+            color: var(--expert);
+            border-bottom-color: var(--expert);
+        }
+        
+        .expert-tab-content {
+            flex: 1;
+            padding: 30px;
+            overflow-y: auto;
+        }
+        
+        .expert-feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 25px;
+            margin-bottom: 40px;
+        }
+        
+        .expert-feature-card {
+            background-color: var(--white);
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            padding: 25px;
+            transition: var(--transition);
+            border-left: 4px solid var(--expert);
+        }
+        
+        .expert-feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 15px rgba(0,0,0,0.1);
+        }
+        
+        .feature-icon {
+            font-size: 2.5rem;
+            color: var(--expert);
+            margin-bottom: 15px;
+        }
+        
+        .feature-title {
+            font-size: 1.3rem;
+            margin-bottom: 15px;
+            color: var(--primary);
+        }
+        
+        .feature-description {
+            color: var(--gray);
+            margin-bottom: 15px;
+        }
+        
+        .feature-btn {
+            background-color: var(--expert);
+            color: var(--white);
+            padding: 8px 20px;
+            border-radius: 30px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: var(--transition);
+            display: inline-block;
+        }
+        
+        .feature-btn:hover {
+            background-color: #7d3c98;
+        }
+        
+        .expert-chatbot-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 20px;
+        }
+        
+        .expert-chatbot-card {
+            background-color: var(--white);
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            overflow: hidden;
+            transition: var(--transition);
+            cursor: pointer;
+        }
+        
+        .expert-chatbot-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 15px rgba(0,0,0,0.1);
+        }
+        
+        .expert-card-header {
+            padding: 15px;
+            color: var(--white);
+            text-align: center;
+        }
+        
+        .expert-card-body {
+            padding: 20px;
+        }
+        
+        .expert-card-body h3 {
+            font-size: 1.1rem;
+            margin-bottom: 10px;
+            color: var(--primary);
+        }
+        
+        .expert-card-body p {
+            color: var(--gray);
+            font-size: 0.9rem;
+            margin-bottom: 15px;
+        }
+        
+        .expert-card-footer {
+            padding: 0 20px 20px;
+        }
+        
+        .expert-access-btn {
+            width: 100%;
+            background-color: var(--expert);
+            color: var(--white);
+            padding: 10px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: var(--transition);
+            display: block;
+            text-align: center;
+        }
+        
+        .expert-access-btn:hover {
+            background-color: #7d3c98;
+        }
+        
+        .api-section {
+            background-color: var(--light);
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 30px;
+        }
+        
+        .api-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .api-title {
+            font-size: 1.5rem;
+            color: var(--primary);
+        }
+        
+        .api-key-container {
+            background-color: var(--white);
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .api-key-label {
+            font-weight: 600;
+            margin-right: 15px;
+            color: var(--gray);
+        }
+        
+        .api-key {
+            flex: 1;
+            font-family: monospace;
+            background-color: var(--light);
+            padding: 8px 15px;
+            border-radius: 5px;
+            margin-right: 15px;
+        }
+        
+        .copy-btn {
+            background-color: var(--secondary);
+            color: var(--white);
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+        
+        .copy-btn:hover {
+            background-color: #3d8b40;
+        }
+        
+        .api-endpoints {
+            background-color: var(--white);
+            border-radius: 8px;
+            padding: 20px;
+        }
+        
+        .endpoint {
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        .endpoint:last-child {
+            margin-bottom: 0;
+            padding-bottom: 0;
+            border-bottom: none;
+        }
+        
+        .endpoint-method {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-right: 10px;
+        }
+        
+        .get {
+            background-color: #4CAF50;
+            color: white;
+        }
+        
+        .post {
+            background-color: #2196F3;
+            color: white;
+        }
+        
+        .endpoint-url {
+            font-family: monospace;
+            background-color: var(--light);
+            padding: 5px 10px;
+            border-radius: 4px;
+            margin-right: 10px;
+        }
+        
+        .endpoint-description {
+            color: var(--gray);
+            margin-top: 5px;
+        }
+        
+        .dashboard-section {
+            background-color: var(--light);
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 30px;
+        }
+        
+        .dashboard-preview {
+            background-color: var(--white);
+            border-radius: 8px;
+            padding: 20px;
+            height: 300px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--gray);
+        }
+        
+        .dashboard-controls {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+        
+        .dashboard-btn {
+            background-color: var(--expert);
+            color: var(--white);
+            padding: 10px 20px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: var(--transition);
+        }
+        
+        .dashboard-btn:hover {
+            background-color: #7d3c98;
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .header-container {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            nav ul {
+                margin-top: 20px;
+            }
+            
+            nav ul li {
+                margin: 0 10px;
+            }
+            
+            .hero h1 {
+                font-size: 2.2rem;
+            }
+            
+            .chatbot-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .transparency-container {
+                flex-direction: column;
+            }
+            
+            .modal-content {
+                width: 95%;
+                height: 90vh;
+                margin: 5% auto;
+            }
+            
+            .modal-body {
+                flex-direction: column;
+            }
+            
+            .chat-sidebar {
+                width: 100%;
+                border-right: none;
+                border-bottom: 1px solid #e0e0e0;
+                max-height: 30%;
+            }
+            
+            .chat-main {
+                width: 100%;
+            }
+            
+            .expert-modal-content {
+                width: 98%;
+                margin: 1% auto;
+            }
+            
+            .expert-feature-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .expert-chatbot-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <div class="container header-container">
+            <div class="logo">
+                <i class="fas fa-chart-line"></i>
+                <span>DataBot IA</span>
+            </div>
+            <nav>
+                <ul>
+                    <li><a href="#chatbots">Chatbots</a></li>
+                    <li><a href="fuentes.html">Fuentes</a></li>
+                    <li><a href="acerca.html">Acerca de</a></li>
+                    <li><a href="#" class="expert-btn" id="expertAccessBtn">Acceso Expertos</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="container">
+            <h1>Pregunta. Descubre. Decide.</h1>
+            <p>Datos oficiales en tiempo real, respondidos por IA especializada</p>
+            <a href="#chatbots" class="cta-button">Explorar Chatbots</a>
+        </div>
+    </section>
+
+    <!-- Chatbots Section -->
+    <section class="chatbots" id="chatbots">
+        <div class="container">
+            <div class="section-title">
+                <h2>Chatbots Temáticos</h2>
+                <p>Explora datos especializados en diferentes áreas con nuestra tecnología de IA</p>
+            </div>
+            
+            <div class="search-container">
+                <input type="text" class="search-input" placeholder="Buscar chatbots por tema...">
+                <button class="search-btn"><i class="fas fa-search"></i></button>
+            </div>
+            
+            <div class="filter-container">
+                <button class="filter-btn active">Todos</button>
+                <button class="filter-btn">Sociales</button>
+                <button class="filter-btn">Ambientales</button>
+                <button class="filter-btn">Económicos</button>
+            </div>
+            
+            <div class="chatbot-grid">
+                <!-- Delincuencia -->
+                <div class="chatbot-card" data-theme="sociales">
+                    <div class="card-header">
+                        <i class="fas fa-shield-alt"></i>
+                        <h3>Delincuencia</h3>
+                    </div>
+                    <div class="card-body">
+                        <p>Estadísticas de seguridad, tendencias criminales y análisis geográfico</p>
+                        <div class="card-stats">
+                            <div class="stat-item">
+                                <div class="stat-value">142K</div>
+                                <div class="stat-label">Casos anuales</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value">-8.2%</div>
+                                <div class="stat-label">Variación anual</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value">346</div>
+                                <div class="stat-label">Comunas</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-footer">
+                        <a href="#" class="chat-btn chat-trigger" data-chat="delincuencia">Conversar</a>
+                        <a href="#" class="expert-chat-btn expert-chat-trigger" data-chat="delincuencia">Experto</a>
+                        <span class="update-badge">Actualizado: Hoy</span>
+                    </div>
+                </div>
+                
+                <!-- Empleo Público -->
+                <div class="chatbot-card" data-theme="economicos">
+                    <div class="card-header" style="background-color: #4a6fa5;">
+                        <i class="fas fa-briefcase"></i>
+                        <h3>Empleo Público</h3>
+                    </div>
+                    <div class="card-body">
+                        <p>Datos de contrataciones, distribución sectorial y evolución salarial</p>
+                        <div class="card-stats">
+                            <div class="stat-item">
+                                <div class="stat-value">524K</div>
+                                <div class="stat-label">Empleados</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value">+3.7%</div>
+                                <div class="stat-label">Crecimiento</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value">18</div>
+                                <div class="stat-label">Ministerios</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-footer">
+                        <a href="#" class="chat-btn chat-trigger" data-chat="empleo">Conversar</a>
+                        <a href="#" class="expert-chat-btn expert-chat-trigger" data-chat="empleo">Experto</a>
+                        <span class="update-badge">Actualizado: Ayer</span>
+                    </div>
+                </div>
+                
+                <!-- Ambiente -->
+                <div class="chatbot-card" data-theme="ambientales">
+                    <div class="card-header" style="background-color: var(--secondary);">
+                        <i class="fas fa-leaf"></i>
+                        <h3>Ambiente</h3>
+                    </div>
+                    <div class="card-body">
+                        <p>Cambio climático, calidad del aire, biodiversidad y recursos naturales</p>
+                        <div class="card-stats">
+                            <div class="stat-item">
+                                <div class="stat-value">1.8°C</div>
+                                <div class="stat-label">Aumento temp.</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value">42</div>
+                                <div class="stat-label">Estaciones</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value">68%</div>
+                                <div class="stat-label">Calidad aire</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-footer">
+                        <a href="#" class="chat-btn chat-trigger" data-chat="ambiente">Conversar</a>
+                        <a href="#" class="expert-chat-btn expert-chat-trigger" data-chat="ambiente">Experto</a>
+                        <span class="update-badge">Actualizado: Hoy</span>
+                    </div>
+                </div>
+                
+                <!-- Salud -->
+                <div class="chatbot-card" data-theme="sociales">
+                    <div class="card-header" style="background-color: #e74c3c;">
+                        <i class="fas fa-heartbeat"></i>
+                        <h3>Salud</h3>
+                    </div>
+                    <div class="card-body">
+                        <p>Indicadores epidemiológicos, cobertura sanitaria y recursos hospitalarios</p>
+                        <div class="card-stats">
+                            <div class="stat-item">
+                                <div class="stat-value">3.2M</div>
+                                <div class="stat-label">Atenciones</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value">284</div>
+                                <div class="stat-label">Hospitales</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value">92%</div>
+                                <div class="stat-label">Cobertura</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-footer">
+                        <a href="#" class="chat-btn chat-trigger" data-chat="salud">Conversar</a>
+                        <a href="#" class="expert-chat-btn expert-chat-trigger" data-chat="salud">Experto</a>
+                        <span class="update-badge">Actualizado: 2 días</span>
+                    </div>
+                </div>
+                
+                <!-- Educación -->
+                <div class="chatbot-card" data-theme="sociales">
+                    <div class="card-header" style="background-color: #f39c12;">
+                        <i class="fas fa-graduation-cap"></i>
+                        <h3>Educación</h3>
+                    </div>
+                    <div class="card-body">
+                        <p>Matrículas, resultados de pruebas, cobertura educativa y recursos</p>
+                        <div class="card-stats">
+                            <div class="stat-item">
+                                <div class="stat-value">4.5M</div>
+                                <div class="stat-label">Estudiantes</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value">12,450</div>
+                                <div class="stat-label">Establecimientos</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value">458</div>
+                                <div class="stat-label">Puntaje PSU</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-footer">
+                        <a href="#" class="chat-btn chat-trigger" data-chat="educacion">Conversar</a>
+                        <a href="#" class="expert-chat-btn expert-chat-trigger" data-chat="educacion">Experto</a>
+                        <span class="update-badge">Actualizado: 3 días</span>
+                    </div>
+                </div>
+                
+                <!-- Uso de Suelo -->
+                <div class="chatbot-card" data-theme="ambientales">
+                    <div class="card-header" style="background-color: #8e44ad;">
+                        <i class="fas fa-mountain"></i>
+                        <h3>Uso de Suelo</h3>
+                    </div>
+                    <div class="card-body">
+                        <p>Cambios en cobertura vegetal, urbanización y zonificación territorial</p>
+                        <div class="card-stats">
+                            <div class="stat-item">
+                                <div class="stat-value">24%</div>
+                                <div class="stat-label">Urbano</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value">+1.2%</div>
+                                <div class="stat-label">Cambio anual</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value">56</div>
+                                <div class="stat-label">Regiones</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-footer">
+                        <a href="#" class="chat-btn chat-trigger" data-chat="suelo">Conversar</a>
+                        <a href="#" class="expert-chat-btn expert-chat-trigger" data-chat="suelo">Experto</a>
+                        <span class="update-badge">Actualizado: Semanal</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Examples Section -->
+    <section class="examples">
+        <div class="container">
+            <div class="section-title">
+                <h2>Ejemplos de Uso</h2>
+                <p>Descubre cómo nuestros chatbots pueden responder tus preguntas</p>
+            </div>
+            
+            <div class="examples-container">
+                <div class="example-card" data-example="temp">
+                    <div class="question">¿Cómo ha cambiado la temperatura en Santiago en los últimos 10 años?</div>
+                    <div class="answer">
+                        Según datos de la MMA, la temperatura promedio en Santiago ha aumentado 1.2°C en la última década, con un aceleramiento notable desde 2018.
+                        <div class="chart-container">
+                            <canvas id="tempChart"></canvas>
+                        </div>
+                        <div class="chart-source">
+                            <p><i>Fuente: Ministerio del Medio Ambiente (MMA) - Estaciones meteorológicas de Santiago</i></p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="example-card" data-example="delincuencia">
+                    <div class="question">¿Cuál es la comuna con mayor tasa de robos en la Región Metropolitana?</div>
+                    <div class="answer">
+                        Según el último reporte del Ministerio del Interior, la comuna con mayor tasa de robos es Estación Central con 45.2 casos por cada 1000 habitantes, seguida por Santiago Centro con 42.7.
+                        <div class="chart-container">
+                            <canvas id="delincuenciaChart"></canvas>
+                        </div>
+                        <div class="chart-source">
+                            <p><i>Fuente: Ministerio del Interior y Seguridad Pública - Anuario Estadístico Nacional 2023</i></p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="example-card" data-example="empleo">
+                    <div class="question">¿Cómo ha evolucionado el empleo público en el sector salud?</div>
+                    <div class="answer">
+                        El empleo público en salud ha crecido un 18% en los últimos 5 años, pasando de 125,000 a 147,500 profesionales, con un aumento significativo durante la pandemia.
+                        <div class="chart-container">
+                            <canvas id="empleoChart"></canvas>
+                        </div>
+                        <div class="chart-source">
+                            <p><i>Fuente: Dirección de Presupuestos (DIPRES) - Informe de Empleo Público Sector Salud</i></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Transparency Section -->
+    <section class="transparency">
+        <div class="container">
+            <div class="section-title">
+                <h2>Nuestro Compromiso</h2>
+                <p>Transparencia y precisión en cada respuesta</p>
+            </div>
+            
+            <div class="transparency-container">
+                <div class="transparency-item">
+                    <i class="fas fa-database"></i>
+                    <h3>Datos Oficiales</h3>
+                    <p>Información verificada de fuentes gubernamentales</p>
+                </div>
+                
+                <div class="transparency-item">
+                    <i class="fas fa-sync-alt"></i>
+                    <h3>Actualización Diaria</h3>
+                    <p>Siempre con los datos más recientes disponibles</p>
+                </div>
+                
+                <div class="transparency-item">
+                    <i class="fas fa-certificate"></i>
+                    <h3>Fuentes Verificadas</h3>
+                    <p>Transparencia total en el origen de cada dato</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="footer-container">
+                <div class="footer-col">
+                    <h3>DataBot IA</h3>
+                    <p>Plataforma de acceso inteligente a datos públicos mediante tecnología de IA conversacional.</p>
+                    <div class="social-links">
+                        <a href="#"><i class="fab fa-twitter"></i></a>
+                        <a href="#"><i class="fab fa-linkedin-in"></i></a>
+                        <a href="#"><i class="fab fa-github"></i></a>
+                    </div>
+                </div>
+                
+                <div class="footer-col">
+                    <h3>Enlaces Rápidos</h3>
+                    <ul>
+                        <li><a href="#chatbots">Chatbots</a></li>
+                        <li><a href="fuentes.html">Fuentes</a></li>
+                        <li><a href="acerca.html">Acerca de</a></li>
+                        <li><a href="#">Contacto</a></li>
+                    </ul>
+                </div>
+                
+                <div class="footer-col">
+                    <h3>Recursos</h3>
+                    <ul>
+                        <li><a href="#">Documentación API</a></li>
+                        <li><a href="#">Metodología</a></li>
+                        <li><a href="#">Términos de Uso</a></li>
+                        <li><a href="#">Política de Privacidad</a></li>
+                        <li><a href="#">Preguntas Frecuentes</a></li>
+                    </ul>
+                </div>
+                
+                <div class="footer-col">
+                    <h3>Contacto</h3>
+                    <ul>
+                        <li><i class="fas fa-envelope"></i> info@databot.ai</li>
+                        <li><i class="fas fa-phone"></i> +56 2 2345 6789</li>
+                        <li><i class="fas fa-map-marker-alt"></i> Santiago, Chile</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="copyright">
+                <p>&copy; 2023 DataBot IA. Todos los derechos reservados.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Chat Modal -->
+    <div id="chatModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title" id="modalTitle">Chatbot de Delincuencia</div>
+                <span class="close">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="chat-sidebar">
+                    <h3 class="sidebar-title">Preguntas Frecuentes</h3>
+                    <ul class="faq-list">
+                        <li class="faq-item">Evolución de robos en mi comuna</li>
+                        <li class="faq-item">Comparar regiones</li>
+                        <li class="faq-item">Delitos de mayor frecuencia</li>
+                        <li class="faq-item">Tasa de delincuencia por hora</li>
+                        <li class="faq-item">Recuperación de vehículos robados</li>
+                    </ul>
+                </div>
+                <div class="chat-main">
+                    <div class="chat-messages" id="chatMessages">
+                        <div class="message bot">
+                            <div class="message-content">
+                                <p>¡Hola! Soy tu asistente de datos de delincuencia. Puedo ayudarte con estadísticas de seguridad, tendencias criminales y análisis geográfico. ¿En qué puedo ayudarte hoy?</p>
+                                <div class="message-time">10:30 AM</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="chat-input-container">
+                        <input type="text" class="chat-input" id="chatInput" placeholder="Escribe tu pregunta...">
+                        <button class="send-btn" id="sendBtn"><i class="fas fa-paper-plane"></i></button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Expert Access Modal -->
+    <div id="expertModal" class="modal">
+        <div class="expert-modal-content">
+            <div class="expert-modal-header">
+                <div class="expert-modal-title">Acceso Expertos</div>
+                <span class="close">&times;</span>
+            </div>
+            <div class="expert-modal-body">
+                <div class="expert-tabs">
+                    <div class="expert-tab active" data-tab="features">Características Avanzadas</div>
+                    <div class="expert-tab" data-tab="chatbots">Chatbots Expertos</div>
+                    <div class="expert-tab" data-tab="api">Acceso API</div>
+                    <div class="expert-tab" data-tab="dashboard">Dashboards Personalizados</div>
+                </div>
+                <div class="expert-tab-content">
+                    <!-- Features Tab -->
+                    <div id="features-tab" class="tab-content">
+                        <h2>Características Avanzadas para Expertos</h2>
+                        <p>Accede a herramientas potentes diseñadas para investigadores, analistas y profesionales que requieren un análisis profundo de datos.</p>
+                        
+                        <div class="expert-feature-grid">
+                            <div class="expert-feature-card">
+                                <div class="feature-icon"><i class="fas fa-database"></i></div>
+                                <h3 class="feature-title">Datos en Bruto</h3>
+                                <p class="feature-description">Acceso completo a datasets sin procesar con todas las variables y registros históricos disponibles.</p>
+                                <a href="#" class="feature-btn">Explorar Datos</a>
+                            </div>
+                            
+                            <div class="expert-feature-card">
+                                <div class="feature-icon"><i class="fas fa-code"></i></div>
+                                <h3 class="feature-title">API RESTful</h3>
+                                <p class="feature-description">Integra nuestros datos directamente en tus aplicaciones con nuestra API documentada y segura.</p>
+                                <a href="#" class="feature-btn">Ver Documentación</a>
+                            </div>
+                            
+                            <div class="expert-feature-card">
+                                <div class="feature-icon"><i class="fas fa-chart-bar"></i></div>
+                                <h3 class="feature-title">Análisis Avanzado</h3>
+                                <p class="feature-description">Realiza consultas complejas, correlaciones y análisis estadísticos con múltiples variables.</p>
+                                <a href="#" class="feature-btn">Comenzar Análisis</a>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Chatbots Tab -->
+                    <div id="chatbots-tab" class="tab-content" style="display: none;">
+                        <h2>Chatbots con Modo Experto</h2>
+                        <p>Accede a versiones mejoradas de nuestros chatbots con capacidades avanzadas para análisis profundos.</p>
+                        
+                        <div class="expert-chatbot-grid">
+                            <div class="expert-chatbot-card">
+                                <div class="expert-card-header" style="background-color: var(--primary);">
+                                    <i class="fas fa-shield-alt fa-2x"></i>
+                                    <h3>Delincuencia Experto</h3>
+                                </div>
+                                <div class="expert-card-body">
+                                    <p>Análisis criminal avanzado con datos desagregados por tipo de delito, horario y ubicación geográfica precisa.</p>
+                                </div>
+                                <div class="expert-card-footer">
+                                    <a href="#" class="expert-access-btn">Acceder</a>
+                                </div>
+                            </div>
+                            
+                            <div class="expert-chatbot-card">
+                                <div class="expert-card-header" style="background-color: #4a6fa5;">
+                                    <i class="fas fa-briefcase fa-2x"></i>
+                                    <h3>Empleo Experto</h3>
+                                </div>
+                                <div class="expert-card-body">
+                                    <p>Análisis detallado del mercado laboral con datos por sector, nivel de calificación y evolución salarial.</p>
+                                </div>
+                                <div class="expert-card-footer">
+                                    <a href="#" class="expert-access-btn">Acceder</a>
+                                </div>
+                            </div>
+                            
+                            <div class="expert-chatbot-card">
+                                <div class="expert-card-header" style="background-color: var(--secondary);">
+                                    <i class="fas fa-leaf fa-2x"></i>
+                                    <h3>Ambiente Experto</h3>
+                                </div>
+                                <div class="expert-card-body">
+                                    <p>Modelos climáticos avanzados y análisis de variables ambientales con proyecciones a futuro.</p>
+                                </div>
+                                <div class="expert-card-footer">
+                                    <a href="#" class="expert-access-btn">Acceder</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- API Tab -->
+                    <div id="api-tab" class="tab-content" style="display: none;">
+                        <h2>Acceso a API para Desarrolladores</h2>
+                        <p>Integra nuestros datos directamente en tus aplicaciones con nuestra API RESTful.</p>
+                        
+                        <div class="api-section">
+                            <div class="api-header">
+                                <h3 class="api-title">Tu Clave de API</h3>
+                                <button class="copy-btn" id="copyApiKeyBtn"><i class="fas fa-copy"></i> Copiar</button>
+                            </div>
+                            <div class="api-key-container">
+                                <span class="api-key-label">API Key:</span>
+                                <div class="api-key" id="apiKey">db_exp_7x9k2m5p8q1r4t6y</div>
+                            </div>
+                            
+                            <h4>Endpoints Disponibles</h4>
+                            <div class="api-endpoints">
+                                <div class="endpoint">
+                                    <span class="endpoint-method get">GET</span>
+                                    <span class="endpoint-url">/api/v1/delincuencia</span>
+                                    <div class="endpoint-description">Obtiene datos de delincuencia con filtros por región, comuna y período</div>
+                                </div>
+                                
+                                <div class="endpoint">
+                                    <span class="endpoint-method get">GET</span>
+                                    <span class="endpoint-url">/api/v1/empleo</span>
+                                    <div class="endpoint-description">Accede a datos de empleo público por sector y región</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Dashboard Tab -->
+                    <div id="dashboard-tab" class="tab-content" style="display: none;">
+                        <h2>Dashboards Personalizados</h2>
+                        <p>Crea dashboards interactivos con nuestros datos y visualizaciones avanzadas.</p>
+                        
+                        <div class="dashboard-section">
+                            <h3>Previsualización de Dashboard</h3>
+                            <div class="dashboard-preview">
+                                <i class="fas fa-chart-line fa-3x"></i>
+                                <p>Dashboard interactivo con múltiples visualizaciones</p>
+                            </div>
+                            <div class="dashboard-controls">
+                                <a href="#" class="dashboard-btn">Crear Nuevo Dashboard</a>
+                                <a href="#" class="dashboard-btn">Ver Plantillas</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Datos simulados para los chatbots
+        const chatbotData = {
+            delincuencia: {
+                title: "Chatbot de Delincuencia",
+                source: "Ministerio del Interior y Seguridad Pública",
+                welcome: "¡Hola! Soy tu asistente de datos de delincuencia. Puedo ayudarte con estadísticas de seguridad, tendencias criminales y análisis geográfico. ¿En qué puedo ayudarte hoy?",
+                expertWelcome: "¡Hola! Bienvenido al modo experto de análisis de delincuencia. Aquí puedes realizar consultas avanzadas, acceder a datos desagregados y realizar análisis complejos. ¿Qué análisis te gustaría realizar?",
+                faqs: [
+                    "Evolución de robos en mi comuna",
+                    "Comparar regiones",
+                    "Delitos de mayor frecuencia",
+                    "Tasa de delincuencia por hora",
+                    "Recuperación de vehículos robados"
+                ],
+                expertFaqs: [
+                    "Análisis de correlación entre desempleo y delincuencia",
+                    "Modelo predictivo de robos por comuna",
+                    "Análisis de series temporales de hurtos",
+                    "Mapa de calor de delitos por hora y zona",
+                    "Estadísticas avanzadas de recuperaciones"
+                ],
+                responses: {
+                    "evolución de robos": "Según los datos del último año, los robos han disminuido un 8.2% a nivel nacional. Las comunas con mayor reducción son Providencia (-15%) y Las Condes (-12%).",
+                    "comparar regiones": "La Región Metropolitana concentra el 42% de los delitos nacionales, seguida por Valparaíso con 18% y Biobío con 12%. Sin embargo, la tasa per cápita es más alta en Antofagasta.",
+                    "delitos de mayor frecuencia": "Los delitos más frecuentes son: hurtos (42%), robos con violencia (28%), robos por sorpresa (18%) y otros (12%).",
+                    "tasa de delincuencia por hora": "La hora con mayor incidencia delictiva es entre las 18:00 y 21:00 horas, con un pico a las 19:30 horas. La madrugada (2:00-5:00) tiene la menor incidencia.",
+                    "recuperación de vehículos": "El 32% de los vehículos robados son recuperados dentro de las primeras 72 horas. El plazo promedio de recuperación es de 15 días."
+                },
+                expertResponses: {
+                    "análisis de correlación": "El análisis de correlación entre desempleo y delincuencia muestra un coeficiente de 0.68 a nivel nacional, siendo más fuerte en zonas urbanas (0.72) que en rurales (0.54). Los datos sugieren que por cada punto porcentual de aumento en el desempleo, la delincuencia aumenta en un 1.2%.",
+                    "modelo predictivo": "Nuestro modelo predictivo de robos por comuna tiene una precisión del 87%. Las variables más influyentes son: densidad poblacional (peso 0.32), nivel socioeconómico (0.28), iluminación pública (0.18) y presencia de comercio (0.15).",
+                    "series temporales": "El análisis de series temporales de hurtos muestra una estacionalidad clara con picos en diciembre (aumento del 32%) y valles en julio (disminución del 18%). La tendencia general a 5 años es decreciente (-2.3% anual).",
+                    "mapa de calor": "El mapa de calor por hora y zona muestra que el 78% de los delitos ocurren en áreas comerciales y residenciales de alta densidad. El hotspot principal se concentra en el sector centro-oriente de Santiago entre 19:00 y 22:00 horas.",
+                    "estadísticas avanzadas": "El análisis avanzado de recuperaciones muestra que el 45% de los vehículos recuperados corresponden a robos con violencia, mientras que solo el 22% de hurtos son resueltos. El tiempo promedio de investigación es de 23 días para robos y 45 días para hurtos."
+                }
+            },
+            empleo: {
+                title: "Chatbot de Empleo Público",
+                source: "Dirección de Presupuestos (DIPRES)",
+                welcome: "¡Hola! Soy tu asistente de datos de empleo público. Puedo ayudarte con información sobre contrataciones, distribución sectorial y evolución salarial. ¿Qué te gustaría saber?",
+                expertWelcome: "¡Hola! Bienvenido al modo experto de análisis de empleo público. Aquí puedes realizar análisis económicos avanzados, modelar proyecciones y acceder a datos desagregados. ¿Qué análisis te gustaría realizar?",
+                faqs: [
+                    "Evolución del empleo público",
+                    "Distribución por ministerio",
+                    "Salarios promedio por sector",
+                    "Contrataciones recientes",
+                    "Empleo por género"
+                ],
+                expertFaqs: [
+                    "Análisis de productividad del sector público",
+                    "Proyecciones de empleo a 5 años",
+                    "Análisis de brecha salarial de género",
+                    "Correlación entre inversión y empleo",
+                    "Modelo de optimización de recursos"
+                ],
+                responses: {
+                    "evolución del empleo público": "El empleo público ha crecido un 3.7% en el último año, pasando de 505,000 a 524,000 empleados. El sector salud muestra el mayor crecimiento con 8.2%.",
+                    "distribución por ministerio": "Los ministerios con más empleados son: Educación (28%), Salud (22%), Interior (15%), Hacienda (12%) y otros (23%).",
+                    "salarios promedio": "El salario promedio en el sector público es de $1,250,000. Los sectores mejor remunerados son Minería ($2,400,000) y Energía ($2,100,000).",
+                    "contrataciones recientes": "En el último trimestre se han realizado 12,450 nuevas contrataciones, con énfasis en profesionales de salud (35%) y educadores (28%).",
+                    "empleo por género": "El 58% de los empleados públicos son mujeres, con mayor presencia en Educación (72%) y Salud (68%). Los hombres predominan en Minería (82%) y Construcción (76%)."
+                },
+                expertResponses: {
+                    "análisis de productividad": "El análisis de productividad del sector público muestra un índice de 0.78 (escala 0-1). Los sectores más eficientes son Hacienda (0.92) y Transporte (0.85), mientras que los menos eficientes son Vivienda (0.65) y Agricultura (0.61).",
+                    "proyecciones": "Nuestro modelo proyecta un crecimiento del empleo público del 2.8% anual para los próximos 5 años, con mayor expansión en sectores tecnológicos (5.2%) y sanitarios (4.1%). Se estima una reducción del 1.2% en áreas administrativas.",
+                    "brecha salarial": "El análisis de brecha salarial de género muestra una diferencia del 18% a favor de los hombres. Esta brecha se reduce al 8% al controlar por nivel educativo, experiencia y cargo. Las áreas con mayor equidad son Educación (5%) y Salud (7%).",
+                    "correlación inversión": "La correlación entre inversión pública y empleo es de 0.73. Por cada $1,000 millones de inversión adicional, se generan aproximadamente 2,800 empleos directos y 5,200 indirectos. El multiplicador es mayor en infraestructura (3.2) que en servicios (1.8).",
+                    "optimización recursos": "El modelo de optimización sugiere una reasignación del 12% de recursos desde áreas administrativas hacia servicios directos, lo que podría aumentar la productividad global en un 15% sin aumentar el gasto total."
+                }
+            },
+            ambiente: {
+                title: "Chatbot de Ambiente",
+                source: "Ministerio del Medio Ambiente (MMA)",
+                welcome: "¡Hola! Soy tu asistente de datos ambientales. Puedo ayudarte con información sobre cambio climático, calidad del aire, biodiversidad y recursos naturales. ¿En qué puedo asistirte?",
+                expertWelcome: "¡Hola! Bienvenido al modo experto de análisis ambiental. Aquí puedes realizar modelado climático, análisis de escenarios y acceder a datos científicos avanzados. ¿Qué análisis te gustaría realizar?",
+                faqs: [
+                    "Calidad del aire en Santiago",
+                    "Evolución de temperaturas",
+                    "Niveles de contaminación hídrica",
+                    "Superficie de áreas protegidas",
+                    "Emisiones de CO2"
+                ],
+                expertFaqs: [
+                    "Modelos de cambio climático regional",
+                    "Análisis de escenarios de emisiones",
+                    "Modelación de calidad del aire",
+                    "Evaluación de impacto ambiental",
+                    "Análisis de biodiversidad y ecosistemas"
+                ],
+                responses: {
+                    "calidad del aire en santiago": "Hoy la calidad del aire en Santiago es regular (Índice 68). Las estaciones con peor calidad son Las Condes (82) y Pudahuel (79).",
+                    "evolución de temperaturas": "La temperatura promedio en Chile ha aumentado 1.8°C en los últimos 50 años. La región más afectada es Magallanes con +2.4°C.",
+                    "contaminación hídrica": "El 42% de los ríos monitoreados presentan niveles de contaminación sobre los límites permitidos. Los más críticos son el Mapocho y el Maipo.",
+                    "áreas protegidas": "Chile cuenta con 145 áreas protegidas que cubren el 21% del territorio nacional. En los últimos 5 años se han creado 12 nuevas áreas.",
+                    "emisiones de co2": "Las emisiones de CO2 han aumentado un 35% en la última década. El sector transporte contribuye con el 42% de las emisiones totales."
+                },
+                expertResponses: {
+                    "modelos climáticos": "Nuestros modelos regionales de cambio climático proyectan un aumento de temperatura entre 2.5°C y 4.2°C para 2100 en el escenario RCP 8.5. La precipitación disminuiría un 25% en el norte y aumentaría un 15% en el sur.",
+                    "escenarios de emisiones": "El análisis de escenarios muestra que para cumplir con el Acuerdo de París, Chile debe reducir sus emisiones en un 45% para 2030. El escenario más ambicioso (Net Zero 2050) requeriría una inversión de $28,000 millones anuales.",
+                    "modelación aire": "La modelación de calidad del aire con CALPUFF muestra que las PM2.5 en Santiago podrían reducirse un 35% con la implementación del plan de descontaminación, pero aumentarían un 12% sin medidas adicionales debido al crecimiento vehicular.",
+                    "evaluación impacto": "La evaluación de impacto ambiental del proyecto minero X muestra una alta probabilidad (78%) de afectación a acuíferos y un riesgo moderado (45%) para biodiversidad local. Se recomiendan 12 medidas de mitigación.",
+                    "análisis biodiversidad": "El análisis de biodiversidad usando indicadores de Shannon y Simpson muestra una pérdida del 18% en diversidad de especies nativas en áreas intervenidas. Los ecosistemas más vulnerables son los bosques esclerófilos (32% pérdida) y los humedales costeros (28% pérdida)."
+                }
+            },
+            salud: {
+                title: "Chatbot de Salud",
+                source: "Ministerio de Salud (MINSAL)",
+                welcome: "¡Hola! Soy tu asistente de datos de salud. Puedo ayudarte con indicadores epidemiológicos, cobertura sanitaria y recursos hospitalarios. ¿Qué información necesitas?",
+                expertWelcome: "¡Hola! Bienvenido al modo experto de análisis de salud. Aquí puedes realizar epidemiología avanzada, modelado de epidemias y análisis de sistemas de salud. ¿Qué análisis te gustaría realizar?",
+                faqs: [
+                    "Camas hospitalarias disponibles",
+                    "Tiempo de espera en urgencias",
+                    "Cobertura de vacunación",
+                    "Enfermedades más frecuentes",
+                    "Recursos humanos en salud"
+                ],
+                expertFaqs: [
+                    "Modelos epidemiológicos predictivos",
+                    "Análisis de carga de enfermedad",
+                    "Evaluación de efectividad de tratamientos",
+                    "Modelos de simulación de epidemias",
+                    "Análisis de coste-efectividad"
+                ],
+                responses: {
+                    "camas hospitalarias": "Actualmente hay un 78% de ocupación de camas críticas a nivel nacional. Las regiones con mayor presión son Metropolitana (92%) y Valparaíso (85%).",
+                    "tiempo de espera": "El tiempo promedio de espera en urgencias es de 42 minutos. Los hospitales con menor espera son Clínica Alemana (18 min) y Clínica Las Condes (22 min).",
+                    "cobertura de vacunación": "La cobertura de vacunación contra la influenza es del 68% a nivel nacional. Las regiones con mejor cobertura son Aysén (82%) y Magallanes (79%).",
+                    "enfermedades frecuentes": "Las enfermedades más frecuentes en consultas son: infecciones respiratorias (32%), hipertensión (18%), diabetes (12%) y enfermedades dermatológicas (10%).",
+                    "recursos humanos": "Hay 2.8 médicos por cada 1,000 habitantes. La región con mejor ratio es Metropolitana (3.4) y la peor es Aysén (1.2)."
+                },
+                expertResponses: {
+                    "modelos predictivos": "Nuestro modelo epidemiológico predictivo para influenza muestra un pico esperado en julio con 45,000 casos semanales (IC95%: 38,000-52,000). El modelo SIR estima una tasa de ataque del 12% en población no vacunada.",
+                    "carga enfermedad": "El análisis de carga de enfermedad muestra que los AVAD (Años de Vida Ajustados por Discapacidad) por enfermedades crónicas representan el 68% del total. Las principales causas son enfermedades cardiovasculares (32%), cáncer (24%) y diabetes (12%).",
+                    "efectividad tratamientos": "La evaluación de efectividad muestra que el nuevo tratamiento para cáncer colorrectal aumenta la supervivencia a 5 años en 23% (HR=0.67, p<0.001) con un NNT de 4.2. El análisis coste-efectividad muestra un ICER de $12,500 por QALY ganado.",
+                    "simulación epidemias": "El modelo SEIR para COVID-19 muestra que sin medidas de contención, el pico epidémico alcanzaría 850,000 casos diarios con 45,000 hospitalizaciones. Con medidas actuales, se proyecta un pico de 120,000 casos y 8,500 hospitalizaciones.",
+                    "coste-efectividad": "El análisis coste-efectividad del programa de detección precoz de diabetes muestra un ICER de $8,200 por QALY ganado, muy por debajo del umbral de $25,000 considerado costo-efectivo en Chile. El beneficio neto estimado es de $480 millones anuales."
+                }
+            },
+            educacion: {
+                title: "Chatbot de Educación",
+                source: "Ministerio de Educación (MINEDUC)",
+                welcome: "¡Hola! Soy tu asistente de datos educativos. Puedo ayudarte con información sobre matrículas, resultados de pruebas, cobertura educativa y recursos. ¿Qué te gustaría consultar?",
+                expertWelcome: "¡Hola! Bienvenido al modo experto de análisis educativo. Aquí puedes realizar evaluaciones de impacto, modelado predictivo y análisis de factores socioeconómicos. ¿Qué análisis te gustaría realizar?",
+                faqs: [
+                    "Resultados PSU por región",
+                    "Cobertura educativa",
+                    "Deserción escolar",
+                    "Recursos por establecimiento",
+                    "Matrícula técnica profesional"
+                ],
+                expertFaqs: [
+                    "Modelos predictivos de rendimiento",
+                    "Análisis de valor agregado",
+                    "Evaluación de impacto de programas",
+                    "Análisis de brechas socioeconómicas",
+                    "Modelos de optimización de recursos"
+                ],
+                responses: {
+                    "resultados psu": "El puntaje promedio PSU a nivel nacional es 458 puntos. Las regiones con mejores resultados son Metropolitana (487) y Antofagasta (475). La más baja es Araucanía (412).",
+                    "cobertura educativa": "La cobertura educativa en Chile es del 96.5% en educación básica y 89% en media. Las regiones con menor cobertura son Los Ríos (87%) y La Araucanía (85%).",
+                    "deserción escolar": "La tasa de deserción escolar a nivel nacional es del 4.2%. Los factores principales son problemas económicos (42%) y desmotivación (28%).",
+                    "recursos por establecimiento": "El promedio de inversión por estudiante es de $1,250,000 anuales. Los establecimientos municipales reciben $980,000 y los particulares subvencionados $1,450,000.",
+                    "matrícula técnica": "La matrícula en educación técnica profesional ha crecido un 18% en los últimos 5 años, representando actualmente el 32% de la matrícula total de educación media."
+                },
+                expertResponses: {
+                    "modelos predictivos": "Nuestro modelo predictivo de rendimiento académico tiene una precisión del 82% (R²=0.79). Las variables más predictivas son: nivel educativo de los padres (β=0.32), ingreso familiar (β=0.28), asistencia escolar (β=0.24) y acceso a tecnología (β=0.18).",
+                    "valor agregado": "El análisis de valor agregado muestra que los establecimientos con mayor VA son aquellos con alta formación docente (+15 puntos PSU) y buen clima escolar (+12 puntos). El efecto socioeconómico inicial explica el 45% de las diferencias.",
+                    "evaluación impacto": "La evaluación de impacto del programa de refuerzo matemático muestra un efecto de +28 puntos en la prueba SIMCE (d=0.62, p<0.001) y una reducción del 32% en la brecha de género. El costo por estudiante es de $85,000.",
+                    "brechas socioeconómicas": "El análisis de brechas muestra que los estudiantes del quintil más alto tienen 3.2 veces más probabilidad de acceder a educación superior que los del quintil más bajo. La brecha en puntaje PSU es de 142 puntos después de controles.",
+                    "optimización recursos": "El modelo de optimización sugiere reasignar el 8% de recursos desde administración a docentes directos en aula, lo que aumentaría el rendimiento promedio en 18 puntos SIMCE sin aumentar el gasto total."
+                }
+            },
+            suelo: {
+                title: "Chatbot de Uso de Suelo",
+                source: "Ministerio de Vivienda y Urbanismo (MINVU)",
+                welcome: "¡Hola! Soy tu asistente de datos de uso de suelo. Puedo ayudarte con información sobre cambios en cobertura vegetal, urbanización y zonificación territorial. ¿Qué te interesa conocer?",
+                expertWelcome: "¡Hola! Bienvenido al modo experto de análisis de uso de suelo. Aquí puedes realizar modelado territorial, análisis de escenarios de urbanización y evaluación de impacto ambiental. ¿Qué análisis te gustaría realizar?",
+                faqs: [
+                    "Cambio de uso agrícola",
+                    "Expansión urbana",
+                    "Pérdida de bosques",
+                    "Zonificación territorial",
+                    "Áreas verdes urbanas"
+                ],
+                expertFaqs: [
+                    "Modelos de crecimiento urbano",
+                    "Análisis de escenarios de uso de suelo",
+                    "Evaluación de servicios ecosistémicos",
+                    "Modelación de cambio climático territorial",
+                    "Análisis de capacidad de carga"
+                ],
+                responses: {
+                    "cambio de uso agrícola": "En los últimos 10 años, el 8% del suelo agrícola ha cambiado a otros usos, principalmente urbano (65%) y forestal (25%).",
+                    "expansión urbana": "Las áreas urbanas han crecido un 1.2% anual en la última década. Las ciudades con mayor expansión son Antofagasta (3.2%) y Puerto Montt (2.8%).",
+                    "pérdida de bosques": "Chile ha perdido el 4.3% de sus bosques nativos en los últimos 20 años. Las regiones más afectadas son La Araucanía (7.2%) y Los Lagos (6.5%).",
+                    "zonificación territorial": "El 68% del territorio nacional tiene zonificación aprobada. Las regiones con mayor avance son Metropolitana (92%) y Valparaíso (85%).",
+                    "áreas verdes": "El promedio de áreas verdes por habitante en ciudades chilenas es de 4.2 m². Las ciudades con mejores índices son Viña del Mar (8.7 m²) y Concepción (7.3 m²)."
+                },
+                expertResponses: {
+                    "crecimiento urbano": "El modelo SLEUTH proyecta que para 2050, las áreas urbanas se expandirán un 42% adicional, principalmente sobre suelos agrícolas de alta calidad (65%) y ecosistemas frágiles (25%). Santiago crecería hacia el sur y poniente principalmente.",
+                    "escenarios uso suelo": "El análisis de escenarios muestra que bajo el escenario tendencial, se perdería el 12% de suelo agrícola de alta calidad para 2040. El escenario sostenible reduciría esta pérdida al 5% mediante políticas de densificación urbana.",
+                    "servicios ecosistémicos": "La evaluación de servicios ecosistémicos muestra que la pérdida de bosques nativos ha representado una reducción del 18% en provisión de agua, 22% en regulación climática y 15% en biodiversidad. El valor económico estimado es de $2,800 millones anuales.",
+                    "cambio climático territorial": "La modelación del cambio climático territorial muestra que para 2070, el 35% del territorio actualmente apto para agricultura se volverá marginal debido a cambios en precipitación y temperatura. Las zonas más afectadas serían Coquimbo y Valparaíso.",
+                    "capacidad carga": "El análisis de capacidad de carga muestra que Santiago ha superado su límite sostenible en un 32%. La huella ecológica per cápita es de 3.8 ha, mientras que la biocapacidad disponible es solo de 1.2 ha por habitante."
+                }
+            }
+        };
+
+        // Configuración de gráficos
+        const chartOptions = {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'top',
+                },
+            }
+        };
+
+        // Inicializar gráficos cuando se carga la página
+        document.addEventListener('DOMContentLoaded', function() {
+            // Gráfico de temperatura
+            const tempCtx = document.getElementById('tempChart').getContext('2d');
+            new Chart(tempCtx, {
+                type: 'line',
+                data: {
+                    labels: ['2013', '2014', '2015', '2016', '2017', '2018', '2019', '2020', '2021', '2022', '2023'],
+                    datasets: [{
+                        label: 'Temperatura (°C)',
+                        data: [14.2, 14.5, 14.8, 14.9, 15.1, 15.4, 15.6, 15.8, 15.9, 16.1, 16.3],
+                        borderColor: '#e74c3c',
+                        backgroundColor: 'rgba(231, 76, 60, 0.1)',
+                        tension: 0.3,
+                        fill: true
+                    }]
+                },
+                options: chartOptions
+            });
+
+            // Gráfico de delincuencia
+            const delincuenciaCtx = document.getElementById('delincuenciaChart').getContext('2d');
+            new Chart(delincuenciaCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Estación Central', 'Santiago Centro', 'Puente Alto', 'Maipú', 'La Florida'],
+                    datasets: [{
+                        label: 'Tasa por cada 1000 habitantes',
+                        data: [45.2, 42.7, 38.9, 35.4, 32.1],
+                        backgroundColor: [
+                            '#e74c3c',
+                            '#e67e22',
+                            '#f39c12',
+                            '#f1c40f',
+                            '#2ecc71'
+                        ]
+                    }]
+                },
+                options: chartOptions
+            });
+
+            // Gráfico de empleo
+            const empleoCtx = document.getElementById('empleoChart').getContext('2d');
+            new Chart(empleoCtx, {
+                type: 'line',
+                data: {
+                    labels: ['2019', '2020', '2021', '2022', '2023'],
+                    datasets: [{
+                        label: 'Empleados en salud',
+                        data: [125000, 132000, 141000, 145000, 147500],
+                        borderColor: '#3498db',
+                        backgroundColor: 'rgba(52, 152, 219, 0.1)',
+                        tension: 0.3,
+                        fill: true
+                    }]
+                },
+                options: chartOptions
+            });
+        });
+
+        // Funcionalidad de filtros
+        const filterBtns = document.querySelectorAll('.filter-btn');
+        const chatbotCards = document.querySelectorAll('.chatbot-card');
+        
+        filterBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                // Remove active class from all buttons
+                filterBtns.forEach(b => b.classList.remove('active'));
+                // Add active class to clicked button
+                btn.classList.add('active');
+                
+                const filter = btn.textContent.toLowerCase();
+                
+                chatbotCards.forEach(card => {
+                    if (filter === 'todos') {
+                        card.style.display = 'block';
+                    } else {
+                        const theme = card.getAttribute('data-theme');
+                        if (theme === filter) {
+                            card.style.display = 'block';
+                        } else {
+                            card.style.display = 'none';
+                        }
+                    }
+                });
+            });
+        });
+
+        // Funcionalidad de búsqueda
+        const searchInput = document.querySelector('.search-input');
+        searchInput.addEventListener('input', function() {
+            const searchTerm = this.value.toLowerCase();
+            
+            chatbotCards.forEach(card => {
+                const title = card.querySelector('h3').textContent.toLowerCase();
+                const description = card.querySelector('p').textContent.toLowerCase();
+                
+                if (title.includes(searchTerm) || description.includes(searchTerm)) {
+                    card.style.display = 'block';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        });
+
+        // Funcionalidad del modal de chat
+        const modal = document.getElementById('chatModal');
+        const modalTitle = document.getElementById('modalTitle');
+        const chatMessages = document.getElementById('chatMessages');
+        const chatInput = document.getElementById('chatInput');
+        const sendBtn = document.getElementById('sendBtn');
+        const closeBtn = document.querySelector('.close');
+        const chatTriggers = document.querySelectorAll('.chat-trigger');
+        const expertChatTriggers = document.querySelectorAll('.expert-chat-trigger');
+        const faqItems = document.querySelectorAll('.faq-item');
+        
+        let currentChatbot = 'delincuencia';
+        let isExpertMode = false;
+        
+        // Abrir modal al hacer clic en "Conversar"
+        chatTriggers.forEach(trigger => {
+            trigger.addEventListener('click', function(e) {
+                e.preventDefault();
+                currentChatbot = this.getAttribute('data-chat');
+                isExpertMode = false;
+                openChatModal();
+            });
+        });
+        
+        // Abrir modal en modo experto
+        expertChatTriggers.forEach(trigger => {
+            trigger.addEventListener('click', function(e) {
+                e.preventDefault();
+                currentChatbot = this.getAttribute('data-chat');
+                isExpertMode = true;
+                openChatModal();
+            });
+        });
+        
+        function openChatModal() {
+            const data = chatbotData[currentChatbot];
+            
+            modalTitle.textContent = data.title + (isExpertMode ? ' - Modo Experto' : '');
+            
+            // Limpiar mensajes anteriores
+            chatMessages.innerHTML = '';
+            
+            // Agregar mensaje de bienvenida
+            const welcomeMessage = isExpertMode ? data.expertWelcome : data.welcome;
+            addBotMessage(welcomeMessage);
+            
+            // Actualizar preguntas frecuentes
+            const faqs = isExpertMode ? data.expertFaqs : data.faqs;
+            faqItems.forEach((item, index) => {
+                item.textContent = faqs[index] || '';
+            });
+            
+            modal.style.display = 'block';
+        }
+        
+        // Cerrar modal
+        closeBtn.addEventListener('click', function() {
+            modal.style.display = 'none';
+        });
+        
+        window.addEventListener('click', function(event) {
+            if (event.target === modal) {
+                modal.style.display = 'none';
+            }
+        });
+        
+        // Enviar mensaje
+        function sendMessage() {
+            const message = chatInput.value.trim();
+            if (message === '') return;
+            
+            // Agregar mensaje del usuario
+            addUserMessage(message);
+            
+            // Limpiar input
+            chatInput.value = '';
+            
+            // Simular respuesta del bot
+            setTimeout(() => {
+                const data = chatbotData[currentChatbot];
+                let response = "Lo siento, no tengo información sobre esa consulta. Prueba con una de las preguntas frecuentes.";
+                let hasSource = false;
+                
+                // Buscar respuesta en las respuestas predefinidas
+                const responses = isExpertMode ? data.expertResponses : data.responses;
+                for (const [key, value] of Object.entries(responses)) {
+                    if (message.toLowerCase().includes(key)) {
+                        response = value;
+                        hasSource = true;
+                        break;
+                    }
+                }
+                
+                addBotMessage(response, hasSource);
+            }, 1000);
+        }
+        
+        sendBtn.addEventListener('click', sendMessage);
+        
+        chatInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+        
+        // Agregar mensaje del usuario
+        function addUserMessage(message) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message user';
+            
+            const now = new Date();
+            const time = now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            
+            messageDiv.innerHTML = `
+                <div class="message-content">
+                    <p>${message}</p>
+                    <div class="message-time">${time}</div>
+                </div>
+            `;
+            
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+        
+        // Agregar mensaje del bot
+        function addBotMessage(message, withSource = false) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message bot';
+            
+            const now = new Date();
+            const time = now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            
+            let sourceHtml = '';
+            if (withSource) {
+                sourceHtml = `<div class="message-source">Fuente: ${chatbotData[currentChatbot].source}</div>`;
+            }
+            
+            messageDiv.innerHTML = `
+                <div class="message-content">
+                    <p>${message}</p>
+                    <div class="message-time">${time}</div>
+                    ${sourceHtml}
+                </div>
+            `;
+            
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+        
+        // Hacer clic en preguntas frecuentes
+        faqItems.forEach(item => {
+            item.addEventListener('click', function() {
+                chatInput.value = this.textContent;
+                sendMessage();
+            });
+        });
+        
+        // Funcionalidad del modal de acceso expertos
+        const expertModal = document.getElementById('expertModal');
+        const expertAccessBtn = document.getElementById('expertAccessBtn');
+        const expertTabs = document.querySelectorAll('.expert-tab');
+        const tabContents = document.querySelectorAll('.tab-content');
+        
+        // Abrir modal de expertos
+        if (expertAccessBtn) {
+            expertAccessBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                expertModal.style.display = 'block';
+            });
+        }
+        
+        // Cerrar modal de expertos
+        document.querySelectorAll('#expertModal .close').forEach(closeBtn => {
+            closeBtn.addEventListener('click', function() {
+                expertModal.style.display = 'none';
+            });
+        });
+        
+        window.addEventListener('click', function(event) {
+            if (event.target === expertModal) {
+                expertModal.style.display = 'none';
+            }
+        });
+        
+        // Funcionalidad de pestañas en modal de expertos
+        expertTabs.forEach(tab => {
+            tab.addEventListener('click', function() {
+                // Remove active class from all tabs
+                expertTabs.forEach(t => t.classList.remove('active'));
+                // Add active class to clicked tab
+                this.classList.add('active');
+                
+                // Hide all tab contents
+                tabContents.forEach(content => {
+                    content.style.display = 'none';
+                });
+                
+                // Show selected tab content
+                const tabId = this.getAttribute('data-tab');
+                document.getElementById(tabId + '-tab').style.display = 'block';
+            });
+        });
+        
+        // Funcionalidad de copiar API key
+        const copyApiKeyBtn = document.getElementById('copyApiKeyBtn');
+        const apiKey = document.getElementById('apiKey');
+        
+        if (copyApiKeyBtn && apiKey) {
+            copyApiKeyBtn.addEventListener('click', function() {
+                // Select the text field
+                apiKey.select();
+                apiKey.setSelectionRange(0, 99999); // For mobile devices
+                
+                // Copy the text inside the text field
+                navigator.clipboard.writeText(apiKey.value).then(function() {
+                    // Alert the copied text
+                    const originalText = copyApiKeyBtn.innerHTML;
+                    copyApiKeyBtn.innerHTML = '<i class="fas fa-check"></i> Copiado';
+                    setTimeout(function() {
+                        copyApiKeyBtn.innerHTML = originalText;
+                    }, 2000);
+                });
+            });
+        }
+        
+        // Smooth scrolling para anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    window.scrollTo({
+                        top: target.offsetTop - 80,
+                        behavior: 'smooth'
+                    });
+                }
+            });
+        });
+    </script>
+</body>
+</html>
