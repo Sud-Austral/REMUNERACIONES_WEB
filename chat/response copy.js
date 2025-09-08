@@ -35,19 +35,15 @@ async function obtenerRespuesta(pregunta) {
 
     const promptBase = `Eres un asistente experto en análisis de datos de empleo público en Chile.
 
-    Estructura la respuesta completa a partir de las siguientes instrucciones, pues ya calcule el valor numerico pero necesito estructurarla de acuerdo a los lienamientos de la siguiente intrucciones:   
-    
+    Muestra de datos crudos (estructura de los datos):
+    ${resumenTexto}
 
     Instrucciones:
-        1. Inicia la respuesta con una frase amigable.
-        2. La respuesta numerica es : 987.654.321 pesos chilenos
-        3. Responde de manera clara y concisa.
-        4. Redacta como respuesta la pregunta.
-        
-        5. Genera un resumen del resultado usando lenguaje natural.
-        6. Tono Conversacional, Nivel Básico
-        7. Debes identificar si esta haciendo una pregunta, si no esta haciendola, por favor indicale amablemente que haga una consulta.
-        8. Ofrece preguntas de seguimiento.
+        1. Responde de manera clara y concisa.
+        2. Redacta como respuesta la pregunta.
+        3. Inicia la respuesta con una frase amigable.
+        4. Genera un resumen del resultado usando lenguaje natural.
+    
     
     `;
 

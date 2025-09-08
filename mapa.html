@@ -1,0 +1,984 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chatbot de Empleo Público 🇨🇱</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Dependencias externas -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <style>
+        /* Estilos CSS principales */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f1f5f9;
+        }
+
+        .chat-container {
+            height: 70vh;
+            overflow-y: auto;
+            border-radius: 1rem;
+            padding: 1.5rem;
+            background-color: white;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .message {
+            margin-bottom: 1rem;
+            display: flex;
+        }
+        .user-message {
+            justify-content: flex-end;
+        }
+        .bot-message {
+            justify-content: flex-start;
+        }
+        .user-bubble {
+            background-color: #3b82f6;
+            color: white;
+            padding: 0.75rem 1.25rem;
+            border-radius: 1.5rem 1.5rem 0.5rem 1.5rem;
+            max-width: 80%;
+        }
+        .bot-bubble {
+            background-color: #e2e8f0;
+            color: #1a202c;
+            padding: 0.75rem 1.25rem;
+            border-radius: 1.5rem 1.5rem 1.5rem 0.5rem;
+            max-width: 80%;
+        }
+
+        .suggestion-card {
+            cursor: pointer;
+            transition: transform 0.2s;
+            border-radius: 0.75rem;
+            flex-shrink: 0;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        .suggestion-card:hover {
+            transform: translateY(-2px);
+        }
+        .suggestion-container {
+            display: flex;
+            flex-wrap: nowrap;
+            overflow-x: auto;
+            gap: 1rem;
+            padding: 1rem 0;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+        }
+        .suggestion-container::-webkit-scrollbar {
+            display: none;
+        }
+        
+        @media (min-width: 640px) {
+            .suggestion-card {
+                width: calc(50% - 0.5rem);
+            }
+        }
+        @media (min-width: 768px) {
+            .suggestion-card {
+                width: auto;
+            }
+        }
+
+        .mic-button {
+            background-color: #ef4444;
+            color: white;
+            padding: 0.75rem;
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: background-color 0.3s;
+        }
+        .mic-button.active {
+            background-color: #22c55e;
+        }
+        .history-panel {
+            width: 300px;
+            height: 100%;
+            background-color: #f8fafc;
+            border-left: 1px solid #e2e8f0;
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        .history-item {
+            cursor: pointer;
+            padding: 0.75rem;
+            border-radius: 0.5rem;
+            background-color: #cbd5e1;
+            transition: background-color 0.2s;
+        }
+        .history-item:hover {
+            background-color: #94a3b8;
+        }
+        .map-container {
+            height: 400px;
+            border-radius: 0.75rem;
+            margin-top: 1rem;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen p-4">
+
+    <div class="bg-white rounded-2xl shadow-xl p-8 w-full max-w-5xl flex gap-8">
+        <!-- Panel principal del Chatbot -->
+        <div class="flex-grow flex flex-col">
+            <div class="text-center mb-6">
+                <h1 class="text-3xl font-bold text-gray-800">Chatbot de Empleo Público 🤖</h1>
+                <p class="text-gray-500 mt-1">Tu asistente para consultas sobre empleo estatal en Chile (2018-2025)</p>
+            </div>
+
+            <!-- Contenedor del chat -->
+            <div id="chat-area" class="chat-container">
+                <!-- Mensaje inicial del bot -->
+                <div class="message bot-message">
+                    <div class="bot-bubble">
+                        Hola, soy tu asistente para el análisis de datos de empleo público en Chile. ¿En qué puedo ayudarte hoy? Puedes preguntar sobre remuneraciones, número de personas por organismo, o cualquier otra cosa.
+                    </div>
+                </div>
+                <!-- Sugerencias iniciales del bot -->
+                <div class="message bot-message">
+                    <div class="bot-bubble">
+                        <p class="font-semibold mb-2">Aquí tienes algunas ideas de preguntas:</p>
+                        <div id="initial-suggestions-container" class="suggestion-container">
+                            <div class="suggestion-card bg-blue-100 text-blue-700 p-4 shadow-sm" onclick="sendQuery('¿Cuál es la remuneración promedio en el Ministerio de Salud en 2023?')">
+                                ¿Cuál es la remuneración promedio en el Ministerio de Salud en 2023?
+                            </div>
+                            <div class="suggestion-card bg-blue-100 text-blue-700 p-4 shadow-sm" onclick="sendQuery('¿Cuántas personas trabajan en el Ministerio de Educación?')">
+                                ¿Cuántas personas trabajan en el Ministerio de Educación?
+                            </div>
+                            <div class="suggestion-card bg-blue-100 text-blue-700 p-4 shadow-sm" onclick="sendQuery('¿Cómo ha evolucionado la dotación de personal en el Ministerio de Hacienda desde 2018? (muéstrame un gráfico)')">
+                                ¿Cómo ha evolucionado la dotación de personal en el Ministerio de Hacienda desde 2018? (muéstrame un gráfico)
+                            </div>
+                            <div class="suggestion-card bg-blue-100 text-blue-700 p-4 shadow-sm" onclick="sendQuery('Muéstrame un mapa de la distribución de empleados públicos por región')">
+                                Muéstrame un mapa de la distribución de empleados públicos por región
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Área de entrada -->
+            <div class="mt-6 flex gap-4">
+                <input type="text" id="user-input" placeholder="Escribe tu consulta aquí..." class="flex-grow p-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <button id="mic-btn" class="mic-button flex items-center justify-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6">
+                        <path d="M8.25 4.5a3.75 3.75 0 1 1 7.5 0v8.25a3.75 3.75 0 1 1-7.5 0V4.5Z" />
+                        <path d="M5.25 9.75a.75.75 0 0 0 0 1.5c2.278 0 4.39.587 6.182 1.674a6.797 6.797 0 0 0 1.902 1.053 6.756 6.756 0 0 0 2.947-.633.75.75 0 0 0-.74-.897 5.25 5.25 0 0 1-2.617.514 5.289 5.289 0 0 1-1.705-.943C8.61 11.026 6.711 10.5 5.25 10.5h-.75V15c0 2.222 1.344 4.145 3.291 4.98a.75.75 0 1 0 .514-1.474 5.25 5.25 0 0 1-2.555-4.256v-1.25H5.25Z" />
+                        <path d="M11.964 19.349a.75.75 0 1 0-.964 1.108 5.26 5.26 0 0 0 3.829-1.637.75.75 0 1 0-1.06-1.06 3.762 3.762 0 0 1-2.765 1.29Z" />
+                    </svg>
+                </button>
+                <button id="send-btn" class="bg-blue-600 text-white p-3 rounded-xl shadow-lg hover:bg-blue-700 transition duration-300">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6">
+                        <path d="M3.478 2.405a.75.75 0 0 0-.926.94l2.432 7.945a.75.75 0 0 0 .926.94 60.597 60.597 0 0 0 11.233-5.918.75.75 0 0 0-.896-1.153L3.478 2.405Z" />
+                        <path d="m15.75 14.869-3.182 2.912c-.244.224-.45.4-.696.536-.183.105-.37.172-.56.208a7.886 7.886 0 0 1-.77.054H9.883a.75.75 0 0 1-.75-.75v-1.5a.75.75 0 0 1 .75-.75h1.53c.123 0 .248-.02.371-.057.143-.042.279-.104.41-.184.22-.132.4-.296.52-.456l3.182-2.913c.277-.253.51-.395.738-.506.183-.092.355-.138.52-.162.174-.025.352-.04.529-.04h1.018c.414 0 .75.336.75.75v1.5a.75.75 0 0 1-.75.75h-1.53a.75.75 0 0 1-.52-.191Z" />
+                    </svg>
+                </button>
+            </div>
+            
+            <div class="mt-4 flex gap-4">
+                <button id="help-btn" class="bg-gray-200 text-gray-800 p-3 rounded-xl shadow-lg hover:bg-gray-300 transition duration-300 flex-grow">Ayuda</button>
+                <button id="clear-btn" class="bg-red-500 text-white p-3 rounded-xl shadow-lg hover:bg-red-600 transition duration-300 flex-grow">Borrar Conversación</button>
+            </div>
+        </div>
+
+        <!-- Panel de Historial -->
+        <div class="history-panel rounded-2xl shadow-xl p-8">
+            <h2 class="text-xl font-bold text-gray-800 mb-4">Historial de Conversaciones</h2>
+            <div id="history-list" class="flex-grow overflow-y-auto">
+                <!-- Los elementos del historial se cargarán aquí -->
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- Declaración de variables y elementos del DOM ---
+            const chatArea = document.getElementById('chat-area');
+            const userInput = document.getElementById('user-input');
+            const sendBtn = document.getElementById('send-btn');
+            const micBtn = document.getElementById('mic-btn');
+            const helpBtn = document.getElementById('help-btn');
+            const clearBtn = document.getElementById('clear-btn');
+            const historyList = document.getElementById('history-list');
+            let myChart = null;
+            let recognition;
+            let isListening = false;
+            let currentHistory = [];
+
+            // --- Datos simulados para el chatbot ---
+            const mockData = {
+                'ministerio_de_salud': {
+                    '2018': { 'remuneracionPromedio': 1800000, 'personasUnicas': 25000 },
+                    '2019': { 'remuneracionPromedio': 1950000, 'personasUnicas': 26000 },
+                    '2020': { 'remuneracionPromedio': 2100000, 'personasUnicas': 27000 },
+                    '2021': { 'remuneracionPromedio': 2250000, 'personasUnicas': 28000 },
+                    '2022': { 'remuneracionPromedio': 2400000, 'personasUnicas': 29000 },
+                    '2023': { 'remuneracionPromedio': 2550000, 'personasUnicas': 30000 },
+                    '2024': { 'remuneracionPromedio': 2700000, 'personasUnicas': 31000 },
+                    '2025': { 'remuneracionPromedio': 2850000, 'personasUnicas': 32000 }
+                },
+                'ministerio_de_educacion': {
+                    '2018': { 'remuneracionPromedio': 1700000, 'personasUnicas': 14000 },
+                    '2019': { 'remuneracionPromedio': 1800000, 'personasUnicas': 14500 },
+                    '2020': { 'remuneracionPromedio': 1900000, 'personasUnicas': 14800 },
+                    '2021': { 'remuneracionPromedio': 2000000, 'personasUnicas': 15000 },
+                    '2022': { 'remuneracionPromedio': 2100000, 'personasUnicas': 15300 },
+                    '2023': { 'remuneracionPromedio': 2200000, 'personasUnicas': 15600 },
+                    '2024': { 'remuneracionPromedio': 2300000, 'personasUnicas': 15800 },
+                    '2025': { 'remuneracionPromedio': 2400000, 'personasUnicas': 16000 }
+                },
+                'ministerio_de_hacienda': {
+                    '2018': { 'remuneracionPromedio': 2000000, 'personasUnicas': 8500 },
+                    '2019': { 'remuneracionPromedio': 2150000, 'personasUnicas': 8600 },
+                    '2020': { 'remuneracionPromedio': 2300000, 'personasUnicas': 8700 },
+                    '2021': { 'remuneracionPromedio': 2450000, 'personasUnicas': 8800 },
+                    '2022': { 'remuneracionPromedio': 2600000, 'personasUnicas': 8900 },
+                    '2023': { 'remuneracionPromedio': 2750000, 'personasUnicas': 9000 },
+                    '2024': { 'remuneracionPromedio': 2900000, 'personasUnicas': 9100 },
+                    '2025': { 'remuneracionPromedio': 3050000, 'personasUnicas': 9200 }
+                },
+                'ministerio_de_obras_publicas': {
+                    '2018': { 'remuneracionPromedio': 1900000, 'personasUnicas': 10000 },
+                    '2019': { 'remuneracionPromedio': 2000000, 'personasUnicas': 10500 },
+                    '2020': { 'remuneracionPromedio': 2100000, 'personasUnicas': 11000 },
+                    '2021': { 'remuneracionPromedio': 2200000, 'personasUnicas': 11500 },
+                    '2022': { 'remuneracionPromedio': 2300000, 'personasUnicas': 12000 },
+                    '2023': { 'remuneracionPromedio': 2400000, 'personasUnicas': 12500 },
+                    '2024': { 'remuneracionPromedio': 2500000, 'personasUnicas': 13000 },
+                    '2025': { 'remuneracionPromedio': 2600000, 'personasUnicas': 13500 }
+                },
+                'servicio_de_impuestos_internos': {
+                    '2018': { 'remuneracionPromedio': 2200000, 'personasUnicas': 6000 },
+                    '2019': { 'remuneracionPromedio': 2300000, 'personasUnicas': 6200 },
+                    '2020': { 'remuneracionPromedio': 2400000, 'personasUnicas': 6500 },
+                    '2021': { 'remuneracionPromedio': 2500000, 'personasUnicas': 6800 },
+                    '2022': { 'remuneracionPromedio': 2600000, 'personasUnicas': 7000 },
+                    '2023': { 'remuneracionPromedio': 2700000, 'personasUnicas': 7200 },
+                    '2024': { 'remuneracionPromedio': 2800000, 'personasUnicas': 7000 },
+                    '2025': { 'remuneracionPromedio': 2900000, 'personasUnicas': 7100 }
+                },
+                'corfo': {
+                    '2018': { 'remuneracionPromedio': 2500000, 'personasUnicas': 2000 },
+                    '2019': { 'remuneracionPromedio': 2650000, 'personasUnicas': 2100 },
+                    '2020': { 'remuneracionPromedio': 2800000, 'personasUnicas': 2050 },
+                    '2021': { 'remuneracionPromedio': 2950000, 'personasUnicas': 2200 },
+                    '2022': { 'remuneracionPromedio': 3100000, 'personasUnicas': 2300 },
+                    '2023': { 'remuneracionPromedio': 3250000, 'personasUnicas': 2400 },
+                    '2024': { 'remuneracionPromedio': 3400000, 'personasUnicas': 2500 },
+                    '2025': { 'remuneracionPromedio': 3550000, 'personasUnicas': 2600 }
+                },
+                'municipalidad_santiago': {
+                    '2018': { 'remuneracionPromedio': 1500000, 'personasUnicas': 5000 },
+                    '2019': { 'remuneracionPromedio': 1600000, 'personasUnicas': 5100 },
+                    '2020': { 'remuneracionPromedio': 1700000, 'personasUnicas': 5200 },
+                    '2021': { 'remuneracionPromedio': 1800000, 'personasUnicas': 5300 },
+                    '2022': { 'remuneracionPromedio': 1900000, 'personasUnicas': 5400 },
+                    '2023': { 'remuneracionPromedio': 2000000, 'personasUnicas': 5500 },
+                    '2024': { 'remuneracionPromedio': 2100000, 'personasUnicas': 5600 },
+                    '2025': { 'remuneracionPromedio': 2200000, 'personasUnicas': 5700 }
+                },
+                'sueldos_comparacion': {
+                    'ingeniero_civil': {
+                        'corfo': { 'sueldo': 2800000 },
+                        'municipalidad_santiago': { 'sueldo': 1950000 }
+                    },
+                    'asistente_administrativo': {
+                        'ministerio_salud': { 'sueldo': 1200000 },
+                        'municipalidad_santiago': { 'sueldo': 950000 },
+                        'corfo': { 'sueldo': 1400000 }
+                    }
+                },
+                'tns_dotacion_historica': {
+                    '2021': { 'personasUnicas': 50000 },
+                    '2022': { 'personasUnicas': 52000 },
+                    '2023': { 'personasUnicas': 55000 },
+                    '2024': { 'personasUnicas': 53000 },
+                    '2025': { 'personasUnicas': 56000 }
+                },
+                'ingeniero_civil_corfo_dotacion_historica': {
+                    '2018': { 'personasUnicas': 1200 },
+                    '2019': { 'personasUnicas': 1300 },
+                    '2020': { 'personasUnicas': 1250 },
+                    '2021': { 'personasUnicas': 1400 },
+                    '2022': { 'personasUnicas': 1500 },
+                    '2023': { 'personasUnicas': 1450 },
+                    '2024': { 'personasUnicas': 1600 },
+                    '2025': { 'personasUnicas': 1700 }
+                },
+                'distribucion_regional': {
+                    'Arica y Parinacota': { lat: -18.4746, lng: -70.2979, employee_count: 4500 },
+                    'Tarapacá': { lat: -20.2136, lng: -70.1524, employee_count: 6200 },
+                    'Antofagasta': { lat: -23.6524, lng: -70.3954, employee_count: 11500 },
+                    'Atacama': { lat: -27.3668, lng: -70.3314, employee_count: 5800 },
+                    'Coquimbo': { lat: -29.9045, lng: -71.2489, employee_count: 10200 },
+                    'Valparaíso': { lat: -33.0472, lng: -71.6127, employee_count: 25500 },
+                    'Metropolitana de Santiago': { lat: -33.4489, lng: -70.6693, employee_count: 150000 },
+                    'O\'Higgins': { lat: -34.1708, lng: -70.7444, employee_count: 12300 },
+                    'Maule': { lat: -35.4262, lng: -71.6554, employee_count: 14800 },
+                    'Ñuble': { lat: -36.6068, lng: -72.1035, employee_count: 8900 },
+                    'Biobío': { lat: -36.8269, lng: -73.0498, employee_count: 22000 },
+                    'La Araucanía': { lat: -38.7359, lng: -72.5904, employee_count: 16500 },
+                    'Los Ríos': { lat: -39.8142, lng: -73.2459, employee_count: 7800 },
+                    'Los Lagos': { lat: -41.4728, lng: -72.9434, employee_count: 15100 },
+                    'Aysén': { lat: -45.5752, lng: -72.0665, employee_count: 3200 },
+                    'Magallanes': { lat: -53.1638, lng: -70.9171, employee_count: 4900 }
+                }
+            };
+            
+            const generalSuggestions = [
+                '¿Cuál es la dotación de personal en el Ministerio de Obras Públicas?',
+                '¿Qué Ministerio tiene la remuneración promedio más alta?',
+                '¿Cómo varía la remuneración para un Asistente Administrativo entre diferentes organismos?',
+                '¿Cuál es la tendencia de contratación para TNS en los últimos 5 años?',
+                '¿Puedes mostrarme un gráfico de la dotación en el Servicio de Impuestos Internos?',
+                '¿Cuántos Ingenieros Civil había en CORFO en 2021?',
+                '¿Cuál es la remuneración promedio en CORFO en 2024?',
+                '¿Cuál es la dotación actual del Ministerio de Hacienda?'
+            ];
+
+            // --- Funciones del Chatbot ---
+
+            /**
+             * Añade un mensaje de "escribiendo..." al área de chat.
+             * @returns {HTMLElement} El elemento del mensaje de "escribiendo".
+             */
+            function addBotTyping() {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = 'message bot-message';
+                messageDiv.innerHTML = '<div class="bot-bubble">...</div>';
+                chatArea.appendChild(messageDiv);
+                chatArea.scrollTop = chatArea.scrollHeight;
+                return messageDiv;
+            }
+
+            /**
+             * Añade un mensaje al área de chat, ya sea del usuario o del bot.
+             * @param {string|object} content El contenido del mensaje (texto, gráfico, mapa o desambiguación).
+             * @param {string} sender El remitente del mensaje ('user' o 'bot').
+             * @param {Array<string>} suggestions Sugerencias de preguntas (solo para el bot).
+             */
+            function addMessage(content, sender, suggestions = []) {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = `message ${sender}-message`;
+                const bubbleDiv = document.createElement('div');
+                bubbleDiv.className = `${sender}-bubble`;
+                
+                let textToDisplay = '';
+                if (typeof content === 'string') {
+                    textToDisplay = content;
+                } else if (typeof content === 'object' && content.text) {
+                    textToDisplay = content.text;
+                }
+                
+                bubbleDiv.innerText = textToDisplay;
+
+                if (typeof content === 'object' && content.type === 'chart') {
+                    const chartCanvas = document.createElement('canvas');
+                    chartCanvas.id = 'myChart';
+                    chartCanvas.className = 'mt-4';
+                    bubbleDiv.appendChild(chartCanvas);
+                    setTimeout(() => {
+                       createChart(content.data);
+                    }, 100);
+                } else if (typeof content === 'object' && content.type === 'map') {
+                    const mapId = `map-${Date.now()}`;
+                    const mapContainer = document.createElement('div');
+                    mapContainer.id = mapId;
+                    mapContainer.className = 'map-container';
+                    bubbleDiv.appendChild(mapContainer);
+                    setTimeout(() => {
+                        createMap(mapId, content.data);
+                    }, 100);
+                } else if (typeof content === 'object' && content.type === 'disambiguation') {
+                    const disambiguationContainer = document.createElement('div');
+                    disambiguationContainer.className = 'suggestion-container flex-col';
+                    content.options.forEach(option => {
+                        const optionCard = document.createElement('div');
+                        optionCard.className = 'suggestion-card bg-purple-100 text-purple-700 p-3 shadow-sm mb-2';
+                        optionCard.innerText = option;
+                        optionCard.onclick = () => sendQuery(option);
+                        disambiguationContainer.appendChild(optionCard);
+                    });
+                    bubbleDiv.appendChild(disambiguationContainer);
+                }
+                
+                messageDiv.appendChild(bubbleDiv);
+                chatArea.appendChild(messageDiv);
+                chatArea.scrollTop = chatArea.scrollHeight;
+
+                if (sender === 'bot') {
+                    const textToSpeak = typeof content === 'string' ? content : content.text;
+                    speakResponse(textToSpeak);
+                    if (typeof content === 'object' && content.type !== 'disambiguation' && suggestions.length > 0) {
+                        const suggestionsWrapper = document.createElement('div');
+                        suggestionsWrapper.className = 'bot-bubble mt-2';
+                        suggestionsWrapper.innerHTML = '<p class="font-semibold mb-2">Quizás también te interese preguntar:</p>';
+                        const suggestionContainer = document.createElement('div');
+                        suggestionContainer.className = 'suggestion-container';
+                        suggestions.forEach(suggestion => {
+                            const suggestionCard = document.createElement('div');
+                            suggestionCard.className = 'suggestion-card bg-blue-100 text-blue-700 p-4 shadow-sm';
+                            suggestionCard.innerText = suggestion;
+                            suggestionCard.onclick = () => sendQuery(suggestion);
+                            suggestionContainer.appendChild(suggestionCard);
+                        });
+                        suggestionsWrapper.appendChild(suggestionContainer);
+                        const suggestionMessageDiv = document.createElement('div');
+                        suggestionMessageDiv.className = 'message bot-message';
+                        suggestionMessageDiv.appendChild(suggestionsWrapper);
+                        chatArea.appendChild(suggestionMessageDiv);
+                        chatArea.scrollTop = chatArea.scrollHeight;
+                    }
+                }
+            }
+
+            /**
+             * Utiliza la API de SpeechSynthesis para leer en voz alta el texto.
+             * @param {string} text El texto que se leerá.
+             */
+            function speakResponse(text) {
+                if ('speechSynthesis' in window) {
+                    speechSynthesis.cancel(); // Cancel previous utterances
+                    const utterance = new SpeechSynthesisUtterance(text);
+                    utterance.lang = 'es-CL';
+                    speechSynthesis.speak(utterance);
+                } else {
+                    console.warn('La síntesis de voz no está soportada en este navegador.');
+                }
+            }
+
+            /**
+             * Genera 2 sugerencias de preguntas aleatorias.
+             * @param {Array<string>} exclude Sugerencias a excluir.
+             * @returns {Array<string>} Un array con dos sugerencias.
+             */
+            function getTwoRandomSuggestions(exclude = []) {
+                const availableSuggestions = generalSuggestions.filter(s => !exclude.includes(s));
+                const suggestions = [];
+                while (suggestions.length < 2 && availableSuggestions.length > 0) {
+                    const randomIndex = Math.floor(Math.random() * availableSuggestions.length);
+                    suggestions.push(availableSuggestions[randomIndex]);
+                    availableSuggestions.splice(randomIndex, 1);
+                }
+                return suggestions;
+            }
+
+            /**
+             * Objeto que mapea patrones de consulta a funciones manejadoras.
+             */
+            const queryHandlers = [
+                // Handler para remuneración promedio
+                {
+                    pattern: /remuneracion promedio.*?(ministerio de (salud|educacion|hacienda|obras publicas)|corfo|servicio de impuestos internos).*?(\d{4})?/i,
+                    handler: (normalizedQuery, match, mockData, response) => {
+                        const organismString = match[1];
+                        let organismKey;
+                        if (organismString.includes('ministerio de')) {
+                            organismKey = `ministerio_de_${match[2]}`;
+                        } else if (organismString === 'corfo') {
+                            organismKey = 'corfo';
+                        } else if (organismString === 'servicio de impuestos internos') {
+                             organismKey = 'servicio_de_impuestos_internos';
+                        } else {
+                            response.text = `No pude identificar el organismo para la consulta de remuneración.`;
+                            return response;
+                        }
+                        const yearMatch = normalizedQuery.match(/20(1[8-9]|[2-9][0-9])/);
+                        const year = yearMatch ? yearMatch[0] : '2025';
+                        if (mockData[organismKey] && mockData[organismKey][year] && mockData[organismKey][year].remuneracionPromedio) {
+                            const remuneracion = mockData[organismKey][year].remuneracionPromedio.toLocaleString('es-CL');
+                            response.text = `La remuneración promedio en ${organismString.replace('_de_', ' de ').replace('corfo', 'CORFO').replace('servicio de impuestos internos', 'Servicio de Impuestos Internos')} en ${year} fue de $${remuneracion}.`;
+                        } else {
+                            response.text = `No tengo datos de remuneración para ${organismString.replace('_de_', ' de ').replace('corfo', 'CORFO').replace('servicio de impuestos internos', 'Servicio de Impuestos Internos')} en el año ${year}.`;
+                        }
+                        return response;
+                    }
+                },
+                // Handler para dotación de personal
+                {
+                    pattern: /(cuantas personas|dotacion de personal).*?(ministerio de (salud|educacion|hacienda|obras publicas)|corfo|servicio de impuestos internos).*?(\d{4})?/i,
+                    handler: (normalizedQuery, match, mockData, response) => {
+                        const organismString = match[2];
+                        let organismKey;
+                        if (organismString.includes('ministerio de')) {
+                            organismKey = `ministerio_de_${match[3]}`;
+                        } else if (organismString === 'corfo') {
+                            organismKey = 'corfo';
+                        } else if (organismString === 'servicio de impuestos internos') {
+                             organismKey = 'servicio_de_impuestos_internos';
+                        } else {
+                            response.text = `No pude identificar el organismo para la consulta de dotación.`;
+                            return response;
+                        }
+                        const yearMatch = normalizedQuery.match(/20(1[8-9]|[2-9][0-9])/);
+                        const year = yearMatch ? yearMatch[0] : '2025';
+                        if (mockData[organismKey] && mockData[organismKey][year] && mockData[organismKey][year].personasUnicas) {
+                            const personas = mockData[organismKey][year].personasUnicas.toLocaleString('es-CL');
+                            response.text = `Según los datos de ${year}, la dotación de personal en ${organismString.replace('_de_', ' de ').replace('corfo', 'CORFO').replace('servicio de impuestos internos', 'Servicio de Impuestos Internos')} fue de ${personas} personas.`;
+                        } else {
+                            response.text = `No tengo datos de dotación para ${organismString.replace('_de_', ' de ').replace('corfo', 'CORFO').replace('servicio de impuestos internos', 'Servicio de Impuestos Internos')} en el año ${year}.`;
+                        }
+                        return response;
+                    }
+                },
+                // Handler para comparar sueldos de Ingeniero Civil
+                {
+                    pattern: /comparar el sueldo de un ingeniero civil en corfo y un municipio/i,
+                    handler: (normalizedQuery, match, mockData, response) => {
+                        const corfoData = mockData.sueldos_comparacion.ingeniero_civil.corfo.sueldo.toLocaleString('es-CL');
+                        const municipioData = mockData.sueldos_comparacion.ingeniero_civil.municipalidad_santiago.sueldo.toLocaleString('es-CL');
+                        response.text = `La remuneración de un Ingeniero Civil en CORFO es de $${corfoData}, mientras que en un municipio de Santiago es de $${municipioData}. Esto refleja una diferencia significativa, como se indica en los informes.`;
+                        return response;
+                    }
+                },
+                // Handler para gráfico de evolución de dotación (Ministerio de Hacienda)
+                {
+                    pattern: /evolucion.*?dotacion.*?ministerio de hacienda.*?(grafico)?/i,
+                    handler: (normalizedQuery, match, mockData, response) => {
+                        const haciendaData = mockData.ministerio_de_hacienda;
+                        const labels = Object.keys(haciendaData);
+                        const dataPoints = Object.values(haciendaData).map(d => d.personasUnicas);
+                        response.type = 'chart';
+                        response.text = 'Aquí está la evolución de la dotación de personal del Ministerio de Hacienda:';
+                        response.data = {
+                            labels: labels,
+                            datasets: [{
+                                label: 'Dotación de Personal',
+                                data: dataPoints,
+                                borderColor: '#3b82f6',
+                                backgroundColor: 'rgba(59, 130, 246, 0.2)',
+                                fill: true,
+                                tension: 0.4
+                            }]
+                        };
+                        return response;
+                    }
+                },
+                // Handler para mapa de distribución regional
+                {
+                    pattern: /distribucion.*?(empleados publicos|personal).*?region.*?(mapa)?/i,
+                    handler: (normalizedQuery, match, mockData, response) => {
+                        response.type = 'map';
+                        response.text = 'Claro, aquí tienes un mapa interactivo con la distribución de empleados públicos por región en Chile:';
+                        response.data = mockData.distribucion_regional;
+                        return response;
+                    }
+                },
+                // Handler para gráfico de dotación del Servicio de Impuestos Internos
+                {
+                    pattern: /(grafico|evolucion).*?dotacion.*?servicio de impuestos internos/i,
+                    handler: (normalizedQuery, match, mockData, response) => {
+                        const siiData = mockData.servicio_de_impuestos_internos;
+                        const labels = Object.keys(siiData);
+                        const dataPoints = Object.values(siiData).map(d => d.personasUnicas);
+                        response.type = 'chart';
+                        response.text = 'Aquí tienes la evolución de la dotación de personal del Servicio de Impuestos Internos:';
+                        response.data = {
+                            labels: labels,
+                            datasets: [{
+                                label: 'Dotación de Personal SII',
+                                data: dataPoints,
+                                borderColor: '#10b981',
+                                backgroundColor: 'rgba(16, 185, 129, 0.2)',
+                                fill: true,
+                                tension: 0.4
+                            }]
+                        };
+                        return response;
+                    }
+                },
+                // Handler para el Ministerio con la remuneración promedio más alta
+                {
+                    pattern: /que ministerio tiene la remuneracion promedio mas alta/i,
+                    handler: (normalizedQuery, match, mockData, response) => {
+                        let highestRemuneration = 0;
+                        let highestOrganism = 'Ninguno';
+                        const currentYear = '2025';
+                        for (const key in mockData) {
+                            if (key.startsWith('ministerio_de_') || key === 'corfo' || key === 'municipalidad_santiago' || key === 'servicio_de_impuestos_internos') {
+                                if (mockData[key][currentYear] && mockData[key][currentYear].remuneracionPromedio > highestRemuneration) {
+                                    highestRemuneration = mockData[key][currentYear].remuneracionPromedio;
+                                    highestOrganism = key.replace(/_/g, ' ').replace('ministerio de', 'Ministerio de').replace('corfo', 'CORFO').replace('municipalidad santiago', 'Municipalidad de Santiago').replace('servicio de impuestos internos', 'Servicio de Impuestos Internos');
+                                }
+                            }
+                        }
+                        response.text = `Según los datos de ${currentYear}, el organismo con la remuneración promedio más alta es ${highestOrganism} con aproximadamente $${highestRemuneration.toLocaleString('es-CL')}.`;
+                        return response;
+                    }
+                },
+                // Handler para comparación de remuneración de Asistente Administrativo
+                {
+                    pattern: /como varia la remuneracion para un asistente administrativo entre diferentes organismos/i,
+                    handler: (normalizedQuery, match, mockData, response) => {
+                        const aaData = mockData.sueldos_comparacion.asistente_administrativo;
+                        let text = 'La remuneración para un Asistente Administrativo varía significativamente:';
+                        for (const org in aaData) {
+                            const orgName = org.replace(/_/g, ' ').replace('ministerio salud', 'Ministerio de Salud').replace('municipalidad santiago', 'Municipalidad de Santiago').replace('corfo', 'CORFO');
+                            text += ` En ${orgName}, es de $${aaData[org].sueldo.toLocaleString('es-CL')}.`;
+                        }
+                        response.text = text;
+                        return response;
+                    }
+                },
+                // Handler para la tendencia de contratación para TNS
+                {
+                    pattern: /cual es la tendencia de contratacion para tns en los ultimos 5 anos/i,
+                    handler: (normalizedQuery, match, mockData, response) => {
+                        const tnsData = mockData.tns_dotacion_historica;
+                        const years = Object.keys(tnsData).sort();
+                        let trendText = 'La tendencia de contratación para TNS en los últimos años es:';
+                        years.forEach(year => {
+                            trendText += ` En ${year}, la dotación fue de ${tnsData[year].personasUnicas.toLocaleString('es-CL')}.`;
+                        });
+                        trendText += ' Se observa una tendencia general de crecimiento, aunque con fluctuaciones.';
+                        response.text = trendText + ' ¿Te gustaría ver un gráfico de esta evolución?';
+                        response.suggestions.push('Muéstrame un gráfico de la dotación de TNS');
+                        return response;
+                    }
+                },
+                // Handler para la dotación de Ingenieros Civiles en CORFO por año
+                {
+                    pattern: /cuantos ingenieros civil habia en corfo en.*?(\d{4})/i,
+                    handler: (normalizedQuery, match, mockData, response) => {
+                        const year = match[1];
+                        if (mockData.ingeniero_civil_corfo_dotacion_historica[year]) {
+                            const count = mockData.ingeniero_civil_corfo_dotacion_historica[year].personasUnicas.toLocaleString('es-CL');
+                            response.text = `En CORFO, había ${count} Ingenieros Civiles en el año ${year}.`;
+                        } else {
+                            response.text = `No tengo datos específicos sobre Ingenieros Civiles en CORFO para el año ${year}.`;
+                        }
+                        return response;
+                    }
+                },
+                // Handler para la dotación actual del Ministerio de Hacienda
+                {
+                    pattern: /cual es la dotacion actual del ministerio de hacienda/i,
+                    handler: (normalizedQuery, match, mockData, response) => {
+                        const haciendaData = mockData.ministerio_de_hacienda;
+                        const currentYear = '2025';
+                        if (haciendaData[currentYear] && haciendaData[currentYear].personasUnicas) {
+                            const personas = haciendaData[currentYear].personasUnicas.toLocaleString('es-CL');
+                            response.text = `La dotación actual del Ministerio de Hacienda (2025) es de ${personas} personas.`;
+                        } else {
+                            response.text = `No tengo datos de dotación actual para el Ministerio de Hacienda.`;
+                        }
+                        return response;
+                    }
+                },
+                // Handler para la desambiguación de "Sueldos en CORFO"
+                {
+                    pattern: /sueldos? en corfo/i,
+                    handler: (normalizedQuery, match, mockData, response) => {
+                        response.type = 'disambiguation';
+                        response.text = 'Parece que estás preguntando por sueldos en CORFO. ¿A qué te refieres exactamente?';
+                        response.options = [
+                            '¿Cuál es la remuneración promedio en CORFO en 2025?',
+                            '¿Cuántos Ingenieros Civil había en CORFO en 2025?'
+                        ];
+                        response.suggestions = [];
+                        return response;
+                    }
+                }
+            ];
+
+            // --- Lógica del Chatbot ---
+            
+            /**
+             * Procesa la consulta del usuario, la interpreta y genera una respuesta.
+             * @param {string} query La consulta del usuario.
+             * @returns {Promise<object>} Un objeto con el texto de la respuesta, tipo (si es gráfico/desambiguación) y sugerencias.
+             */
+            async function processQuery(query) {
+                let response = { text: '', suggestions: getTwoRandomSuggestions() };
+                const normalizedQuery = query.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+                for (const handlerConfig of queryHandlers) {
+                    const match = normalizedQuery.match(handlerConfig.pattern);
+                    if (match) {
+                        return handlerConfig.handler(normalizedQuery, match, mockData, response);
+                    }
+                }
+                response.text = 'Lo siento, no tengo datos para esa consulta específica. Por favor, intenta de nuevo o haz clic en una de las sugerencias.';
+                return response;
+            }
+
+            // --- Funciones para gráficos y mapas ---
+
+            /**
+             * Crea un gráfico de línea utilizando Chart.js en el canvas.
+             * @param {object} data Los datos y configuración para Chart.js.
+             */
+            function createChart(data) {
+                const ctx = document.getElementById('myChart');
+                if (myChart) {
+                    myChart.destroy();
+                }
+                myChart = new Chart(ctx, {
+                    type: 'line',
+                    data: data,
+                    options: {
+                        responsive: true,
+                        scales: {
+                            y: { beginAtZero: false }
+                        }
+                    }
+                });
+            }
+
+            /**
+             * Crea un mapa interactivo utilizando Leaflet.js.
+             * @param {string} mapId El ID del contenedor del mapa.
+             * @param {object} data Los datos geográficos para graficar.
+             */
+            function createMap(mapId, data) {
+                try {
+                    const map = L.map(mapId).setView([-40, -73], 4); // Centrado en Chile
+                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                    }).addTo(map);
+
+                    let maxEmployees = 0;
+                    Object.values(data).forEach(region => {
+                        if (region.employee_count > maxEmployees) {
+                            maxEmployees = region.employee_count;
+                        }
+                    });
+
+                    Object.entries(data).forEach(([regionName, regionData]) => {
+                        const radius = 5000 + (regionData.employee_count / maxEmployees) * 80000; // Escalar el radio
+                        
+                        L.circle([regionData.lat, regionData.lng], {
+                            color: '#3b82f6',
+                            fillColor: '#60a5fa',
+                            fillOpacity: 0.6,
+                            radius: radius
+                        }).addTo(map)
+                        .bindPopup(`<b>${regionName}</b><br>${regionData.employee_count.toLocaleString('es-CL')} empleados`);
+                    });
+                } catch (e) {
+                    console.error("Error al crear el mapa:", e);
+                    const mapContainer = document.getElementById(mapId);
+                    if (mapContainer) {
+                        mapContainer.innerText = "No se pudo cargar el mapa. Por favor, revisa la consola para más detalles.";
+                    }
+                }
+            }
+
+
+            // --- Manejo de la Interacción del Usuario ---
+            
+            /**
+             * Envía una consulta predefinida al chatbot.
+             * @param {string} query La consulta a enviar.
+             */
+            window.sendQuery = function(query) {
+                userInput.value = query;
+                sendMessage();
+            }
+
+            /**
+             * Gestiona el envío de un mensaje del usuario.
+             */
+            async function sendMessage() {
+                const query = userInput.value.trim();
+                if (!query) return;
+
+                addMessage(query, 'user');
+                saveToHistory('user', query);
+                userInput.value = '';
+
+                const typingMessage = addBotTyping();
+                
+                const response = await processQuery(query);
+                typingMessage.remove();
+                addMessage(response, 'bot', response.suggestions);
+                saveToHistory('bot', response.text);
+            }
+
+            /**
+             * Maneja la pulsación de la tecla 'Enter' para enviar el mensaje.
+             * @param {KeyboardEvent} event El evento del teclado.
+             */
+            function handleKeyPress(event) {
+                if (event.key === 'Enter') {
+                    sendMessage();
+                }
+            }
+
+            // --- Funcionalidades de Historial y Ayuda ---
+            
+            /**
+             * Guarda un mensaje en el historial local.
+             * @param {string} sender El remitente ('user' o 'bot').
+             * @param {string} text El texto del mensaje.
+             */
+            function saveToHistory(sender, text) {
+                const entry = { sender, text, timestamp: new Date().toLocaleTimeString() };
+                currentHistory.push(entry);
+                localStorage.setItem('chatHistory', JSON.stringify(currentHistory));
+                renderHistory();
+            }
+
+            /**
+             * Carga el historial desde localStorage.
+             */
+            function loadHistory() {
+                const savedHistory = localStorage.getItem('chatHistory');
+                if (savedHistory) {
+                    currentHistory = JSON.parse(savedHistory);
+                    renderHistory();
+                    currentHistory.forEach(msg => {
+                        addMessage(msg.text, msg.sender);
+                    });
+                }
+            }
+
+            /**
+             * Muestra el historial de conversaciones en el panel lateral.
+             */
+            function renderHistory() {
+                historyList.innerHTML = '';
+                if (currentHistory.length === 0) {
+                    historyList.innerHTML = '<p class="text-gray-400 text-center">No hay conversaciones guardadas.</p>';
+                    return;
+                }
+                const conversations = groupHistoryByConversation();
+                conversations.forEach((convo, index) => {
+                    const convoItem = document.createElement('div');
+                    convoItem.className = 'history-item mb-2';
+                    const firstUserMessage = convo.find(msg => msg.sender === 'user')?.text || 'Nueva Conversación';
+                    convoItem.innerText = `${index + 1}. ${firstUserMessage.substring(0, 30)}...`;
+                    convoItem.onclick = () => loadConversation(convo);
+                    historyList.appendChild(convoItem);
+                });
+            }
+
+            /**
+             * Agrupa los mensajes del historial en conversaciones.
+             * @returns {Array<Array<object>>} Un array de conversaciones.
+             */
+            function groupHistoryByConversation() {
+                const conversations = [];
+                let currentConvo = [];
+                for (let i = 0; i < currentHistory.length; i++) {
+                    const msg = currentHistory[i];
+                    currentConvo.push(msg);
+                    if (msg.sender === 'bot' && (i === currentHistory.length - 1 || currentHistory[i+1].sender === 'user')) {
+                        conversations.push(currentConvo);
+                        currentConvo = [];
+                    }
+                }
+                return conversations;
+            }
+
+            /**
+             * Carga una conversación específica en el chat principal.
+             * @param {Array<object>} conversation La conversación a cargar.
+             */
+            function loadConversation(conversation) {
+                chatArea.innerHTML = '';
+                conversation.forEach(msg => {
+                    addMessage(msg.text, msg.sender);
+                });
+            }
+
+            /**
+             * Muestra un mensaje de ayuda en el chat.
+             */
+            function showHelp() {
+                const helpMessage = `
+                ¡Hola! Soy un chatbot diseñado para ayudarte a explorar datos sobre el empleo público en Chile.
+                Puedes preguntarme sobre:
+                1.  **Remuneraciones:** Ej. "¿Cuál es el sueldo promedio en el Ministerio de Salud en 2023?"
+                2.  **Dotación de personal:** Ej. "¿Cuántas personas trabajan en el Ministerio de Educación?"
+                3.  **Comparaciones:** Ej. "Comparar el sueldo de un Ingeniero Civil en CORFO y un municipio."
+                4.  **Tendencias y Gráficos:** Ej. "¿Cómo ha evolucionado la dotación de personal en el Ministerio de Hacienda desde 2018?"
+                5.  **Mapas:** Ej. "Muéstrame un mapa de la distribución de empleados públicos por región."
+                
+                También puedes usar el botón de micrófono para hablarme y el panel de historial para ver tus conversaciones pasadas. ¡Estoy aquí para ayudarte!
+                `;
+                addMessage(helpMessage, 'bot');
+            }
+
+            /**
+             * Borra toda la conversación actual y el historial.
+             */
+            function clearConversation() {
+                chatArea.innerHTML = '';
+                currentHistory = [];
+                localStorage.removeItem('chatHistory');
+                renderHistory();
+                addMessage('Conversación borrada. ¿Cómo puedo ayudarte ahora?', 'bot');
+            }
+
+            // --- Inicialización del Reconocimiento de Voz ---
+            if ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window) {
+                const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+                recognition = new SpeechRecognition();
+                recognition.continuous = false;
+                recognition.lang = 'es-CL';
+                recognition.interimResults = false;
+
+                recognition.onstart = () => {
+                    isListening = true;
+                    micBtn.classList.add('active');
+                    userInput.placeholder = 'Escuchando...';
+                };
+
+                recognition.onresult = (event) => {
+                    const transcript = event.results[0][0].transcript;
+                    userInput.value = transcript;
+                    sendMessage();
+                };
+
+                recognition.onend = () => {
+                    isListening = false;
+                    micBtn.classList.remove('active');
+                    userInput.placeholder = 'Escribe tu consulta aquí...';
+                };
+
+                recognition.onerror = (event) => {
+                    console.error('Error en el reconocimiento de voz:', event.error);
+                    if (event.error === 'network') {
+                        userInput.placeholder = 'Error de red. Por favor, verifica tu conexión a Internet.';
+                        speakResponse('Error de red. Por favor, verifica tu conexión a Internet.');
+                    } else {
+                        userInput.placeholder = `Error de voz: ${event.error}. Intenta de nuevo.`;
+                        speakResponse(`Error de voz. ${event.error}. Intenta de nuevo.`);
+                    }
+                    isListening = false;
+                    micBtn.classList.remove('active');
+                };
+
+                micBtn.addEventListener('click', () => {
+                    if (isListening) {
+                        recognition.stop();
+                    } else {
+                        recognition.start();
+                    }
+                });
+            } else {
+                micBtn.style.display = 'none';
+                console.warn('El reconocimiento de voz no está soportado en este navegador.');
+            }
+
+            // --- Event Listeners principales ---
+            sendBtn.addEventListener('click', sendMessage);
+            userInput.addEventListener('keydown', handleKeyPress);
+            helpBtn.addEventListener('click', showHelp);
+            clearBtn.addEventListener('click', clearConversation);
+
+            // Cargar el historial al iniciar
+            loadHistory();
+        });
+    </script>
+</body>
+</html>
