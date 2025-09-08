@@ -1,6 +1,6 @@
 
-//const apiKey = 'AIzaSyCVFFxs6RlhqgskHpZgkZ7Ivug1fm4HJk8';
-const apiKey = 'AIzaSyDLzplCcOl_xbZWghCnwCP9Qmw7cE_eg6o';
+const apiKey = 'AIzaSyCVFFxs6RlhqgskHpZgkZ7Ivug1fm4HJk8';
+//const apiKey = 'AIzaSyDLzplCcOl_xbZWghCnwCP9Qmw7cE_eg6o';
 const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`;
 
 // Historial de la conversación
