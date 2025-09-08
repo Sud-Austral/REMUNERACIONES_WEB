@@ -192,7 +192,7 @@ async function obtenerRespuestaFinal(pregunta, respuesta) {
             4. Redacta la respuesta a partir de la pregunta, por ejemplo: ¿Cual es el sueldo promedio en el año 24?, El suelo promedio en el año 2024 ..., seria una respuesta adecuada.            
             5. Genera un resumen del resultado usando lenguaje natural.
             6. Tono Conversacional, Nivel Básico
-            7. Debes identificar si esta haciendo una pregunta, si no esta haciendola, por favor indicale amablemente que haga una consulta.
+            7. Si tienes la respuesta, siempre debes respondiendo con la respuesta dada anteriormente.
             8. Ofrece preguntas de seguimiento.
             9. El resultado debes darlo con formato chileno, la unidad es Pesos Chilenos.
             10. La respuesta esta calculada desde una base de datos oficial, no es un numero estimado ni proyectado, es un numero real desde una base de datos real.
