@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tendencias salariales por contrato</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+        }
+        canvas {
+            background-color: #ffffff;
+            border: 1px solid #e5e7eb;
+            border-radius: 0.5rem;
+            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+        }
+    </style>
+</head>
+<body class="p-6">
+    <div id="app" class="p-6 space-y-6 text-gray-900">
+        <h1 class="text-2xl font-bold">Tendencias — Total y por tipo de contrato (marzo 2022–2025)</h1>
+        <p class="text-sm text-gray-600">Pestañas: Total, Contrata, Planta, Honorarios, Cod Trabajo. Incluye medias, relación HH/MM, dotación, masa salarial y % femenino.</p>
+        <div id="tab-buttons" class="flex flex-wrap gap-2"></div>
+        <div id="chart-container" class="space-y-4"></div>
+        <p class="text-xs text-gray-500">Fuente: tabla compartida. Edita el arreglo `base` para ajustar cifras.</p>
+    </div>
+
+    <script>
+        // Datos y definiciones
+        const tipos = ['Contrata', 'Planta', 'Honorarios', 'Cod Trabajo'];
+        const base = [
+            { tipo: 'Contrata', anio: 2022, hh: 103911, mm: 185756, mediaHH: 1899664, mediaMM: 1523482 },
+            { tipo: 'Contrata', anio: 2023, hh: 110063, mm: 197863, mediaHH: 2083032, mediaMM: 1681734 },
+            { tipo: 'Contrata', anio: 2024, hh: 122996, mm: 221150, mediaHH: 2150040, mediaMM: 1704080 },
+            { tipo: 'Contrata', anio: 2025, hh: 131205, mm: 243322, mediaHH: 2405409, mediaMM: 1905822 },
+            { tipo: 'Planta', anio: 2022, hh: 63353, mm: 122355, mediaHH: 2048569, mediaMM: 1710828 },
+            { tipo: 'Planta', anio: 2023, hh: 66535, mm: 132501, mediaHH: 2284738, mediaMM: 1940993 },
+            { tipo: 'Planta', anio: 2024, hh: 71157, mm: 142256, mediaHH: 2430967, mediaMM: 2085024 },
+            { tipo: 'Planta', anio: '2025', hh: 71153, mm: 142650, mediaHH: 2577913, mediaMM: 2198437 },
+            { tipo: 'Honorarios', anio: 2022, hh: 45861, mm: 65871, mediaHH: 1445670, mediaMM: 1227958 },
+            { tipo: 'Honorarios', anio: 2023, hh: 45968, mm: 62627, mediaHH: 1447245, mediaMM: 946982 },
+            { tipo: 'Honorarios', anio: 2024, hh: 52649, mm: 71405, mediaHH: 1330993, mediaMM: 1050797 },
+            { tipo: 'Honorarios', anio: 2025, hh: 47129, mm: 58181, mediaHH: 1305797, mediaMM: 1063686 },
+            { tipo: 'Cod Trabajo', anio: 2022, hh: 37187, mm: 101121, mediaHH: 1069926, mediaMM: 869193 },
+            { tipo: 'Cod Trabajo', anio: 2023, hh: 42884, mm: 110608, mediaHH: 1205318, mediaMM: 979579 },
+            { tipo: 'Cod Trabajo', anio: 2024, hh: 47062, mm: 115935, mediaHH: 1292399, mediaMM: 1053792 },
+            { tipo: 'Cod Trabajo', anio: 2025, hh: 45732, mm: 115203, mediaHH: 1457298, mediaMM: 1177047 },
+        ];
+        
+        // Formateadores
+        const currency = v => new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 }).format(v);
+        const pct = v => (v * 100).toFixed(1) + '%';
+        
+        // Estado de la aplicación
+        let currentTab = 'Total';
+        let chartInstances = {};
+
+        // Cálculos de datos
+        const calculateData = () => {
+            const byYear = {};
+            base.forEach(r => {
+                if (!byYear[r.anio]) byYear[r.anio] = { anio: r.anio, hh: 0, mm: 0, sumaHH: 0, sumaMM: 0 };
+                byYear[r.anio].hh += r.hh;
+                byYear[r.anio].mm += r.mm;
+                byYear[r.anio].sumaHH += r.hh * r.mediaHH;
+                byYear[r.anio].sumaMM += r.mm * r.mediaMM;
+            });
+            const totalPorAnio = Object.values(byYear).sort((a, b) => a.anio - b.anio).map(y => ({
+                ...y,
+                mediaHH: y.sumaHH / y.hh,
+                mediaMM: y.sumaMM / y.mm,
+                relacion: (y.sumaHH / y.hh) / (y.sumaMM / y.mm),
+                masaHH: y.sumaHH,
+                masaMM: y.sumaMM,
+                partFem: y.mm / (y.hh + y.mm),
+            }));
+
+            const seriesPorTipo = {};
+            tipos.forEach(t => {
+                seriesPorTipo[t] = base
+                    .filter(r => r.tipo === t)
+                    .sort((a, b) => a.anio - b.anio)
+                    .map(r => ({
+                        ...r,
+                        relacion: r.mediaHH / r.mediaMM,
+                        masaHH: r.hh * r.mediaHH,
+                        masaMM: r.mm * r.mediaMM,
+                        partFem: r.mm / (r.hh + r.mm),
+                    }));
+            });
+            return { totalPorAnio, seriesPorTipo };
+        };
+
+        const { totalPorAnio, seriesPorTipo } = calculateData();
+
+        // Funciones de renderizado de gráficos
+        const createChartBlock = (title, innerHtml) => {
+            const block = document.createElement('div');
+            block.className = "bg-white p-4 rounded-lg border shadow-sm";
+            block.innerHTML = `<h2 class="font-semibold mb-2">${title}</h2>` + innerHtml;
+            return block;
+        };
+
+        const renderChart = (chartId, type, data, options) => {
+            if (chartInstances[chartId]) {
+                chartInstances[chartId].destroy();
+            }
+            const ctx = document.getElementById(chartId);
+            if (!ctx) return;
+            chartInstances[chartId] = new Chart(ctx, { type, data, options });
+        };
+
+        const renderLineChart = (data, title) => {
+            const block = createChartBlock(
+                title + ': Remuneración media (CLP/mes/persona)',
+                `<div style="width: 100%; height: 320px;"><canvas id="mediaChart"></canvas></div>`
+            );
+            document.getElementById('chart-container').appendChild(block);
+
+            renderChart('mediaChart', 'line', {
+                labels: data.map(d => d.anio),
+                datasets: [
+                    { label: 'Media HH', data: data.map(d => d.mediaHH), borderColor: '#2563eb', borderWidth: 2, tension: 0.4, fill: false },
+                    { label: 'Media MM', data: data.map(d => d.mediaMM), borderColor: '#16a34a', borderWidth: 2, tension: 0.4, fill: false }
+                ]
+            }, {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'top' },
+                    tooltip: {
+                        callbacks: {
+                            label: (context) => {
+                                const value = context.parsed.y;
+                                return `${context.dataset.label}: ${currency(value)}`;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: { display: false }
+                    },
+                    y: {
+                        ticks: {
+                            callback: (value) => value / 1e6 + 'M'
+                        }
+                    }
+                }
+            });
+        };
+
+        const renderRelacionChart = (data, title) => {
+            const block = createChartBlock(
+                title + ': Relación HH/MM',
+                `<div style="width: 100%; height: 280px;"><canvas id="relacionChart"></canvas></div>`
+            );
+            document.getElementById('chart-container').appendChild(block);
+
+            renderChart('relacionChart', 'line', {
+                labels: data.map(d => d.anio),
+                datasets: [
+                    { label: 'HH/MM', data: data.map(d => d.relacion), borderColor: '#ef4444', borderWidth: 2, tension: 0.4, fill: false }
+                ]
+            }, {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'top' },
+                    tooltip: {
+                        callbacks: {
+                            label: (context) => {
+                                const value = context.parsed.y;
+                                return `HH/MM: ${value.toFixed(2)}x`;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: { display: false }
+                    },
+                    y: {
+                        min: 1
+                    }
+                }
+            });
+        };
+
+        const renderBarChart = (data, title) => {
+            const block = createChartBlock(
+                title + ': Dotación por sexo',
+                `<div style="width: 100%; height: 280px;"><canvas id="dotacionChart"></canvas></div>`
+            );
+            document.getElementById('chart-container').appendChild(block);
+
+            renderChart('dotacionChart', 'bar', {
+                labels: data.map(d => d.anio),
+                datasets: [
+                    { label: 'HH', data: data.map(d => d.hh), backgroundColor: '#60a5fa' },
+                    { label: 'MM', data: data.map(d => d.mm), backgroundColor: '#86efac' }
+                ]
+            }, {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'top' },
+                    tooltip: { mode: 'index', intersect: false }
+                },
+                scales: {
+                    x: { stacked: false, grid: { display: false } },
+                    y: { stacked: false }
+                }
+            });
+        };
+
+        const renderAreaChart = (data, title) => {
+            const block = createChartBlock(
+                title + ': Masa salarial mensual total (HH y MM)',
+                `<div style="width: 100%; height: 320px;"><canvas id="masaChart"></canvas></div>
+                 <p class="text-xs text-gray-500">Nota: Masa = dotación × remuneración media. Se expresa en CLP/mes; el eje Y muestra trillones (1T = 10^12 CLP).</p>`
+            );
+            document.getElementById('chart-container').appendChild(block);
+
+            renderChart('masaChart', 'line', {
+                labels: data.map(d => d.anio),
+                datasets: [
+                    { label: 'Masa HH', data: data.map(d => d.masaHH), borderColor: '#2563eb', backgroundColor: 'rgba(37, 99, 235, 0.2)', borderWidth: 2, fill: true, tension: 0.4 },
+                    { label: 'Masa MM', data: data.map(d => d.masaMM), borderColor: '#16a34a', backgroundColor: 'rgba(22, 163, 74, 0.2)', borderWidth: 2, fill: true, tension: 0.4 }
+                ]
+            }, {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'top' },
+                    tooltip: {
+                        mode: 'index',
+                        intersect: false,
+                        callbacks: {
+                            label: (context) => {
+                                const value = context.parsed.y;
+                                return `${context.dataset.label}: ${currency(value)}`;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: { display: false }
+                    },
+                    y: {
+                        ticks: {
+                            callback: (value) => (value / 1e12).toFixed(1) + 'T'
+                        }
+                    }
+                }
+            });
+        };
+
+        const renderPartFemChart = (data, title) => {
+            const block = createChartBlock(
+                title + ': Participación femenina en dotación',
+                `<div style="width: 100%; height: 260px;"><canvas id="partFemChart"></canvas></div>`
+            );
+            document.getElementById('chart-container').appendChild(block);
+
+            renderChart('partFemChart', 'line', {
+                labels: data.map(d => d.anio),
+                datasets: [
+                    { label: '% Mujeres', data: data.map(d => d.partFem), borderColor: '#9333ea', borderWidth: 2, tension: 0.4, fill: false }
+                ]
+            }, {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'top' },
+                    tooltip: {
+                        callbacks: {
+                            label: (context) => {
+                                const value = context.parsed.y;
+                                return `Participación femenina: ${pct(value)}`;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: { display: false }
+                    },
+                    y: {
+                        min: 0,
+                        max: 1,
+                        ticks: {
+                            callback: (value) => (value * 100).toFixed(0) + '%'
+                        }
+                    }
+                }
+            });
+        };
+
+        const renderAllCharts = (data, title, mostrarDotacion = true) => {
+            const container = document.getElementById('chart-container');
+            container.innerHTML = '';
+            
+            renderLineChart(data, title);
+            renderRelacionChart(data, title);
+            if (mostrarDotacion) {
+                renderBarChart(data, title);
+            }
+            renderAreaChart(data, title);
+            renderPartFemChart(data, title);
+        };
+        
+        // Función principal de renderizado
+        const renderApp = () => {
+            const tabButtonsContainer = document.getElementById('tab-buttons');
+            tabButtonsContainer.innerHTML = '';
+            ['Total', ...tipos].forEach(t => {
+                const button = document.createElement('button');
+                button.textContent = t;
+                button.className = (t === currentTab ? 'bg-blue-600 text-white ' : 'bg-gray-100 text-gray-800 ') + 'px-3 py-1.5 rounded-lg border';
+                button.addEventListener('click', () => {
+                    currentTab = t;
+                    renderApp();
+                });
+                tabButtonsContainer.appendChild(button);
+            });
+            
+            const dataToDisplay = currentTab === 'Total' ? totalPorAnio : seriesPorTipo[currentTab];
+            const title = currentTab === 'Total' ? 'Total sector público' : currentTab;
+            renderAllCharts(dataToDisplay, title, currentTab === 'Total');
+        };
+
+        // Iniciar la aplicación
+        window.onload = renderApp;
+    </script>
+</body>
+</html>
