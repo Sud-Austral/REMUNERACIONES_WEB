@@ -1,0 +1,934 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Informe de Análisis de Delincuencia</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0f172a;
+            color: #e2e8f0;
+        }
+        .container {
+            max-width: 1200px;
+        }
+        .gradient-text {
+            background-image: linear-gradient(to right, #6366f1, #3b82f6);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+        .card {
+            background-color: #1e293b;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        }
+        .stat-card {
+            min-height: 120px;
+        }
+        .region-card {
+            min-height: 250px;
+            cursor: pointer;
+            overflow: hidden;
+        }
+        .expandable-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.5s ease-in-out;
+        }
+        .expandable-content.expanded {
+            max-height: 500px; /* Ajusta según el contenido */
+        }
+        .rotate-icon {
+            transition: transform 0.3s ease;
+        }
+        .expanded .rotate-icon {
+            transform: rotate(180deg);
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            height: 300px;
+        }
+        canvas {
+            background-color: #1e293b;
+            border-radius: 12px;
+            padding: 1rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .bar {
+            background-color: #3b82f6;
+            transition: height 0.5s ease-in-out;
+        }
+    </style>
+</head>
+<body class="flex flex-col min-h-screen">
+    <header class="bg-slate-900 p-6 sm:p-8 shadow-lg">
+        <div class="container mx-auto">
+            <h1 class="text-3xl sm:text-4xl font-bold text-center gradient-text">Análisis de la Delincuencia en Chile</h1>
+            <p class="text-slate-400 text-center mt-2 text-sm sm:text-base">Tendencias Nacionales y Regionales (Enero-Agosto 2023-2025)</p>
+        </div>
+    </header>
+    <!-- Sección de Bienvenida -->
+    <section class="p-4 sm:p-8">
+        <div class="container mx-auto">
+            <div class="bg-slate-800 p-6 sm:p-8 rounded-2xl shadow-xl">
+                <h2 class="text-xl sm:text-2xl font-semibold mb-4 border-b border-slate-700 pb-2">Bienvenido a la Plataforma de Análisis Delictual</h2>
+                <p class="text-slate-300 text-lg">Este sitio presenta un resumen ejecutivo y un análisis detallado de las tendencias de la delincuencia en Chile, cubriendo el período <strong>Enero-Agosto 2023-2025</strong>. Los datos provienen del <strong>Instituto Libertad</strong>, con base en la información oficial de la Plataforma Informática Ley S.T.O.P. de Carabineros de Chile. Nuestro objetivo es ofrecer una visión clara y accesible sobre la situación de seguridad en el país, con un panorama nacional y un desglose por cada región.</p>
+            </div>
+        </div>
+    </section>
+    <main class="flex-grow p-4 sm:p-8">
+        <div class="container mx-auto">
+            
+            <!-- Sección de Resumen Nacional -->
+            <section class="mb-12">
+                <div class="bg-slate-800 p-6 sm:p-8 rounded-2xl shadow-xl">
+                    <h2 class="text-xl sm:text-2xl font-semibold mb-6 border-b border-slate-700 pb-4">Panorama Nacional</h2>
+                    <p class="text-slate-300 text-lg mb-8">El análisis nacional muestra una tendencia positiva en la mayoría de los indicadores, con una notable reducción en los delitos violentos.</p>
+                    
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                        <!-- Card 1: Reducción Total -->
+                        <div class="card p-6 rounded-2xl shadow-md stat-card flex flex-col items-center justify-center text-center">
+                            <svg class="w-12 h-12 text-green-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
+                            </svg>
+                            <span class="stat-number text-3xl sm:text-5xl font-extrabold text-green-400 mb-2" data-target="-9.1" data-suffix="%">0%</span>
+                            <p class="text-slate-300">Reducción en Delitos Totales</p>
+                            <span class="text-sm text-slate-500 mt-1">(2023-2025)</span>
+                        </div>
+                        <!-- Card 2: Delitos Violentos -->
+                        <div class="card p-6 rounded-2xl shadow-md stat-card flex flex-col items-center justify-center text-center">
+                            <svg class="w-12 h-12 text-green-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                            </svg>
+                            <span class="stat-number text-3xl sm:text-5xl font-extrabold text-green-400 mb-2" data-target="-17.4" data-suffix="%">0%</span>
+                            <p class="text-slate-300">Reducción en Robos con Violencia</p>
+                        </div>
+                        <!-- Card 3: Aumento en Ley de Armas -->
+                        <div class="card p-6 rounded-2xl shadow-md stat-card flex flex-col items-center justify-center text-center">
+                            <svg class="w-12 h-12 text-red-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                            </svg>
+                            <span class="stat-number text-3xl sm:text-5xl font-extrabold text-red-400 mb-2" data-target="62" data-prefix="+" data-suffix="%">0%</span>
+                            <p class="text-slate-300">Aumento en Ley de Control de Armas</p>
+                        </div>
+                        <!-- Card 4: Estabilidad en Homicidios -->
+                        <div class="card p-6 rounded-2xl shadow-md stat-card flex flex-col items-center justify-center text-center">
+                            <svg class="w-12 h-12 text-yellow-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4m16 0l-4-4m4 4l-4 4"></path>
+                            </svg>
+                            <span class="stat-number text-3xl sm:text-5xl font-extrabold text-yellow-400 mb-2" data-target="596">0</span>
+                            <p class="text-slate-300">Casos de Homicidios en 2025</p>
+                            <span class="text-sm text-slate-500 mt-1">(Sin variación significativa)</span>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-12 chart-container">
+                        <canvas id="chartCanvas" class="w-full"></canvas>
+                    </div>
+                    <!-- Botones para controlar el tipo de gráfico -->
+                    <div class="mt-4 flex flex-wrap justify-center gap-4">
+                        <button id="btnTotal" class="bg-blue-600 text-white font-bold py-2 px-4 rounded-xl shadow-lg hover:bg-blue-700 transition-colors duration-300">
+                            Delitos Totales
+                        </button>
+                        <button id="btnViolent" class="bg-blue-600 text-white font-bold py-2 px-4 rounded-xl shadow-lg hover:bg-blue-700 transition-colors duration-300">
+                            Robos con Violencia
+                        </button>
+                        <button id="btnHomicides" class="bg-blue-600 text-white font-bold py-2 px-4 rounded-xl shadow-lg hover:bg-blue-700 transition-colors duration-300">
+                            Homicidios
+                        </button>
+                    </div>
+                    <div class="mt-8 text-center">
+                        <a href="https://raw.githubusercontent.com/Sud-Austral/LIBERTAD_STOP/refs/heads/main/DashboardStop2/SEMANA%2001-2025/Comuna%20Aisen_SEMANA%2001-2025.pdf" class="inline-block w-full sm:w-auto bg-indigo-600 text-white font-bold py-3 px-6 rounded-xl shadow-lg hover:bg-indigo-700 transition-colors duration-300 text-base">Descargar Informe Nacional</a>
+                    </div>
+                </div>
+            </section>
+            <!-- Sección de Vista Regional -->
+            <section>
+                <h2 class="text-xl sm:text-2xl font-semibold mb-6 border-b border-slate-700 pb-4">Resultados por Región</h2>
+                <p class="text-slate-300 text-lg mb-8">Haga clic en una región para ver un resumen detallado. Puede descargar el informe completo para un análisis más exhaustivo.</p>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <!-- Tarjeta de Región - Arica y Parinacota -->
+                    <div class="region-card card p-6 rounded-2xl shadow-lg flex flex-col" data-region-name="Arica y Parinacota">
+                        <div class="flex items-center justify-between">
+                            <h3 class="text-2xl font-semibold text-blue-300">Región de Arica y Parinacota</h3>
+                            <svg class="rotate-icon w-6 h-6 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                            </svg>
+                        </div>
+                        <p class="flex-grow text-slate-400 my-4">
+                            Se alinea con la tendencia nacional a la baja, mostrando una reducción en la delincuencia general.
+                            <br><span class="font-bold text-green-400">Variación General: -15.2%</span>
+                        </p>
+                        <div class="expandable-content border-t border-slate-700 pt-4">
+                            <p class="text-lg font-semibold text-slate-300 mb-2">Principales Delitos (Enero-Agosto 2025)</p>
+                            <ul class="text-sm text-slate-400 space-y-2">
+                                <li class="flex items-center">
+                                    <svg class="w-4 h-4 mr-2 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path>
+                                    </svg>
+                                    <span class="text-slate-300">Tráfico de drogas (1150 casos)</span>
+                                </li>
+                                <li class="flex items-center">
+                                    <svg class="w-4 h-4 mr-2 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                                    </svg>
+                                    <span class="text-slate-300">Robo con fuerza (890 casos)</span>
+                                </li>
+                                <li class="flex items-center">
+                                    <svg class="w-4 h-4 mr-2 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
+                                    </svg>
+                                    <span class="text-slate-300">Violencia intrafamiliar (650 casos)</span>
+                                </li>
+                                <li class="flex items-center">
+                                    <svg class="w-4 h-4 mr-2 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.121 14.121L19 19m-7-7l7-7m-7 7l-2.879 2.879M12 12L9.121 9.121m0 5.758a3 3 0 10-4.243 4.243 3 3 0 004.243-4.243zm0-5.758a3 3 0 10-4.243-4.243 3 3 0 004.243 4.243z"></path>
+                                    </svg>
+                                    <span class="text-slate-300">Lesiones (520 casos)</span>
+                                </li>
+                            </ul>
+                            <a href="https://raw.githubusercontent.com/Sud-Austral/LIBERTAD_STOP/refs/heads/main/DashboardStop2/SEMANA%2001-2025/Comuna%20Aisen_SEMANA%2001-2025.pdf" class="mt-4 inline-block w-full bg-indigo-600 text-white font-bold py-2 px-4 rounded-xl shadow-lg hover:bg-indigo-700 transition-colors duration-300 text-center text-sm">Descargar Informe</a>
+                        </div>
+                    </div>
+                    <!-- Tarjeta de Región - Tarapacá -->
+                    <div class="region-card card p-6 rounded-2xl shadow-lg flex flex-col" data-region-name="Tarapacá">
+                        <div class="flex items-center justify-between">
+                            <h3 class="text-2xl font-semibold text-blue-300">Región de Tarapacá</h3>
+                            <svg class="rotate-icon w-6 h-6 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                            </svg>
+                        </div>
+                        <p class="flex-grow text-slate-400 my-4">
+                            Se alinea con la tendencia nacional a la baja, con una reducción significativa en sus delitos totales.
+                            <br><span class="font-bold text-green-400">Variación General: -20.4%</span>
+                        </p>
+                        <div class="expandable-content border-t border-slate-700 pt-4">
+                            <p class="text-lg font-semibold text-slate-300 mb-2">Principales Delitos (Enero-Agosto 2025)</p>
+                            <ul class="text-sm text-slate-400 space-y-2">
+                                <li class="flex items-center">
+                                    <svg class="w-4 h-4 mr-2 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
+                                    </svg>
+                                    <span class="text-slate-300">Consumo de alcohol (1500 casos)</span>
+                                </li>
+                                <li class="flex items-center">
+                                    <svg class="w-4 h-4 mr-2 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                                    </svg>
+                                    <span class="text-slate-300">Hurto (1250 casos)</span>
+                                </li>
+                                <li class="flex items-center">
+                                    <svg class="w-4 h-4 mr-2 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
+                                    </svg>
+                                    <span class="text-slate-300">Violencia intrafamiliar (890 casos)</span>
+                                </li>
+                            </ul>
+                            <a href="https://raw.githubusercontent.com/Sud-Austral/LIBERTAD_STOP/refs/heads/main/DashboardStop2/SEMANA%2001-2025/Comuna%20Aisen_SEMANA%2001-2025.pdf" class="mt-4 inline-block w-full bg-indigo-600 text-white font-bold py-2 px-4 rounded-xl shadow-lg hover:bg-indigo-700 transition-colors duration-300 text-center text-sm">Descargar Informe</a>
+                        </div>
+                    </div>
+                    <!-- Tarjeta de Región - Antofagasta -->
+                    <div class="region-card card p-6 rounded-2xl shadow-lg flex flex-col" data-region-name="Antofagasta">
+                        <div class="flex items-center justify-between">
+                            <h3 class="text-2xl font-semibold text-blue-300">Región de Antofagasta</h3>
+                            <svg class="rotate-icon w-6 h-6 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                            </svg>
+                        </div>
+                        <p class="flex-grow text-slate-400 my-4">
+                            Muestra una tendencia positiva, con una baja significativa en los delitos generales.
+                            <br><span class="font-bold text-green-400">Variación General: -5.8%</span>
+                        </p>
+                        <div class="expandable-content border-t border-slate-700 pt-4">
+                            <p class="text-lg font-semibold text-slate-300 mb-2">Principales Delitos (Enero-Agosto 2025)</p>
+                            <ul class="text-sm text-slate-400 space-y-2">
+                                <li class="flex items-center">
+                                    <svg class="w-4 h-4 mr-2 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
+                                    </svg>
+                                    <span class="text-slate-300">Violencia intrafamiliar (1800 casos)</span>
+                                </li>
+                                <li class="flex items-center">
+                                    <svg class="w-4 h-4 mr-2 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.121 14.121L19 19m-7-7l7-7m-7 7l-2.879 2.879M12 12L9.121 9.121m0 5.758a3 3 0 10-4.243 4.243 3 3 0 004.243-4.243zm0-5.758a3 3 0 10-4.243-4.243 3 3 0 004.243 4.243z"></path>
+                                    </svg>
+                                    <span class="text-slate-300">Lesiones (1600 casos)</span>
+                                </li>
+                                <li class="flex items-center">
+                                    <svg class="w-4 h-4 mr-2 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                                    </svg>
+                                    <span class="text-slate-300">Hurto (1450 casos)</span>
+                                </li>
+                            </ul>
+                            <a href="https://raw.githubusercontent.com/Sud-Austral/LIBERTAD_STOP/refs/heads/main/DashboardStop2/SEMANA%2001-2025/Comuna%20Aisen_SEMANA%2001-2025.pdf" class="mt-4 inline-block w-full bg-indigo-600 text-white font-bold py-2 px-4 rounded-xl shadow-lg hover:bg-indigo-700 transition-colors duration-300 text-center text-sm">Descargar Informe</a>
+                        </div>
+                    </div>
+                    <!-- Tarjeta de Región - Atacama -->
+                    <div class="region-card card p-6 rounded-2xl shadow-lg flex flex-col" data-region-name="Atacama">
+                        <div class="flex items-center justify-between">
+                            <h3 class="text-2xl font-semibold text-blue-300">Región de Atacama</h3>
+                            <svg class="rotate-icon w-6 h-6 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                            </svg>
+                        </div>
+                        <p class="flex-grow text-slate-400 my-4">
+                            Sigue la tendencia nacional con una notable reducción general en delitos.
+                            <br><span class="font-bold text-green-400">Variación General: -22.1%</span>
+                        </p>
+                        <div class="expandable-content border-t border-slate-700 pt-4">
+                            <p class="text-lg font-semibold text-slate-300 mb-2">Principales Delitos (Enero-Agosto 2025)</p>
+                            <ul class="text-sm text-slate-400 space-y-2">
+                                <li class="flex items-center">
+                                    <svg class="w-4 h-4 mr-2 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                                    </svg>
+                                    <span class="text-slate-300">Hurto (950 casos)</span>
+                                </li>
+                                <li class="flex items-center">
+                                    <svg class="w-4 h-4 mr-2 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
+                                    </svg>
+                                    <span class="text-slate-300">Violencia intrafamiliar (800 casos)</span>
+                                </li>
+                                <li class="flex items-center">
+                                    <svg class="w-4 h-4 mr-2 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.121 14.121L19 19m-7-7l7-7m-7 7l-2.879 2.879M12 12L9.121 9.121m0 5.758a3 3 0 10-4.243 4.243 3 3 0 004.243-4.243zm0-5.758a3 3 0 10-4.243-4.243 3 3 0 004.243 4.243z"></path>
+                                    </svg>
+                                    <span class="text-slate-300">Lesiones (750 casos)</span>
+                                </li>
+                            </ul>
+                            <a href="https://raw.githubusercontent.com/Sud-Austral/LIBERTAD_STOP/refs/heads/main/DashboardStop2/SEMANA%2001-2025/Comuna%20Aisen_SEMANA%2001-2025.pdf" class="mt-4 inline-block w-full bg-indigo-600 text-white font-bold py-2 px-4 rounded-xl shadow-lg hover:bg-indigo-700 transition-colors duration-300 text-center text-sm">Descargar Informe</a>
+                        </div>
+                    </div>
+                    <!-- Tarjeta de Región - Coquimbo -->
+                    <div class="region-card card p-6 rounded-2xl shadow-lg flex flex-col" data-region-name="Coquimbo">
+                        <div class="flex items-center justify-between">
+                            <h3 class="text-2xl font-semibold text-blue-300">Región de Coquimbo</h3>
+                            <svg class="rotate-icon w-6 h-6 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                            </svg>
+                        </div>
+                        <p class="flex-grow text-slate-400 my-4">
+                            Presenta una reducción consistente en los delitos totales y un panorama alentador.
+                            <br><span class="font-bold text-green-400">Variación General: -10.2%</span>
+                        </p>
+                        <div class="expandable-content border-t border-slate-700 pt-4">
+                            <p class="text-lg font-semibold text-slate-300 mb-2">Principales Delitos (Enero-Agosto 2025)</p>
+                            <ul class="text-sm text-slate-400 space-y-2">
+                                <li class="flex items-center">
+                                    <svg class="w-4 h-4 mr-2 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                                    </svg>
+                                    <span class="text-slate-300">Hurto (2200 casos)</span>
+                                </li>
+                                <li class="flex items-center">
+                                    <svg class="w-4 h-4 mr-2 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
+                                    </svg>
+                                    <span class="text-slate-300">Violencia intrafamiliar (1850 casos)</span>
+                                </li>
+                                <li class="flex items-center">
+                                    <svg class="w-4 h-4 mr-2 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.121 14.121L19 19m-7-7l7-7m-7 7l-2.879 2.879M12 12L9.121 9.121m0 5.758a3 3 0 10-4.243 4.243 3 3 0 004.243-4.243zm0-5.758a3 3 0 10-4.243-4.243 3 3 0 004.243 4.243z"></path>
+                                    </svg>
+                                    <span class="text-slate-300">Lesiones (1500 casos)</span>
+                                </li>
+                            </ul>
+                            <a href="https://raw.githubusercontent.com/Sud-Austral/LIBERTAD_STOP/refs/heads/main/DashboardStop2/SEMANA%2001-2025/Comuna%20Aisen_SEMANA%2001-2025.pdf" class="mt-4 inline-block w-full bg-indigo-600 text-white font-bold py-2 px-4 rounded-xl shadow-lg hover:bg-indigo-700 transition-colors duration-300 text-center text-sm">Descargar Informe</a>
+                        </div>
+                    </div>
+                    <!-- Tarjeta de Región - Valparaíso -->
+                    <div class="region-card card p-6 rounded-2xl shadow-lg flex flex-col" data-region-name="Valparaíso">
+                        <div class="flex items-center justify-between">
+                            <h3 class="text-2xl font-semibold text-blue-300">Región de Valparaíso</h3>
+                            <svg class="rotate-icon w-6 h-6 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                            </svg>
+                        </div>
+                        <p class="flex-grow text-slate-400 my-4">
+                            Mantiene una tendencia positiva, con una reducción en la mayoría de los ilícitos.
+                            <br><span class="font-bold text-green-400">Variación General: -8.5%</span>
+                        </p>
+                        <div class="expandable-content border-t border-slate-700 pt-4">
+                            <p class="text-lg font-semibold text-slate-300 mb-2">Principales Delitos (Enero-Agosto 2025)</p>
+                            <ul class="text-sm text-slate-400 space-y-2">
+                                <li class="flex items-center">
+                                    <svg class="w-4 h-4 mr-2 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                                    </svg>
+                                    <span class="text-slate-300">Hurto (2800 casos)</span>
+                                </li>
+                                <li class="flex items-center">
+                                    <svg class="w-4 h-4 mr-2 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
+                                    </svg>
+                                    <span class="text-slate-300">Violencia intrafamiliar (2100 casos)</span>
+                                </li>
+                                <li class="flex items-center">
+                                    <svg class="w-4 h-4 mr-2 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                    </svg>
+                                    <span class="text-slate-300">Robo de vehículos (950 casos)</span>
+                                </li>
+                            </ul>
+                            <a href="https://raw.githubusercontent.com/Sud-Austral/LIBERTAD_STOP/refs/heads/main/DashboardStop2/SEMANA%2001-2025/Comuna%20Aisen_SEMANA%2001-2025.pdf" class="mt-4 inline-block w-full bg-indigo-600 text-white font-bold py-2 px-4 rounded-xl shadow-lg hover:bg-indigo-700 transition-colors duration-300 text-center text-sm">Descargar Informe</a>
+                        </div>
+                    </div>
+                    
+                    <!-- Tarjeta de Región - Metropolitana de Santiago -->
+                    <div class="region-card card p-6 rounded-2xl shadow-lg flex flex-col" data-region-name="Metropolitana">
+                        <div class="flex items-center justify-between">
+                            <h3 class="text-2xl font-semibold text-blue-300">Región Metropolitana de Santiago</h3>
+                            <svg class="rotate-icon w-6 h-6 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                            </svg>
+                        </div>
+                        <p class="flex-grow text-slate-400 my-4">
+                            Sigue la tendencia nacional, con una baja en el total de delitos, aunque los desafíos persisten.
+                            <br><span class="font-bold text-green-400">Variación General: -7.1%</span>
+                        </p>
+                        <div class="expandable-content border-t border-slate-700 pt-4">
+                            <p class="text-lg font-semibold text-slate-300 mb-2">Principales Delitos (Enero-Agosto 2025)</p>
+                            <ul class="text-sm text-slate-400 space-y-2">
+                                <li class="flex items-center">
+                                    <svg class="w-4 h-4 mr-2 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
+                                    </svg>
+                                    <span class="text-slate-300">Violencia intrafamiliar (4500 casos)</span>
+                                </li>
+                                <li class="flex items-center">
+                                    <svg class="w-4 h-4 mr-2 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                                    </svg>
+                                    <span class="text-slate-300">Hurto (4000 casos)</span>
+                                </li>
+                                <li class="flex items-center">
+                                    <svg class="w-4 h-4 mr-2 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                                    </svg>
+                                    <span class="text-slate-300">Robo con violencia (2500 casos)</span>
+                                </li>
+                            </ul>
+                            <a href="https://raw.githubusercontent.com/Sud-Austral/LIBERTAD_STOP/refs/heads/main/DashboardStop2/SEMANA%2001-2025/Comuna%20Aisen_SEMANA%2001-2025.pdf" class="mt-4 inline-block w-full bg-indigo-600 text-white font-bold py-2 px-4 rounded-xl shadow-lg hover:bg-indigo-700 transition-colors duration-300 text-center text-sm">Descargar Informe</a>
+                        </div>
+                    </div>
+                    <!-- Tarjeta de Región - O'Higgins -->
+                    <div class="region-card card p-6 rounded-2xl shadow-lg flex flex-col" data-region-name="O'Higgins">
+                        <div class="flex items-center justify-between">
+                            <h3 class="text-2xl font-semibold text-blue-300">Región del Libertador Gral. B. O'Higgins</h3>
+                            <svg class="rotate-icon w-6 h-6 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                            </svg>
+                        </div>
+                        <p class="flex-grow text-slate-400 my-4">
+                            Se observa una reducción general en los delitos, manteniendo una trayectoria positiva.
+                            <br><span class="font-bold text-green-400">Variación General: -11.5%</span>
+                        </p>
+                        <div class="expandable-content border-t border-slate-700 pt-4">
+                            <p class="text-lg font-semibold text-slate-300 mb-2">Principales Delitos (Enero-Agosto 2025)</p>
+                            <ul class="text-sm text-slate-400 space-y-2">
+                                <li class="flex items-center">
+                                    <svg class="w-4 h-4 mr-2 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.121 14.121L19 19m-7-7l7-7m-7 7l-2.879 2.879M12 12L9.121 9.121m0 5.758a3 3 0 10-4.243 4.243 3 3 0 004.243-4.243zm0-5.758a3 3 0 10-4.243-4.243 3 3 0 004.243 4.243z"></path>
+                                    </svg>
+                                    <span class="text-slate-300">Lesiones (1100 casos)</span>
+                                </li>
+                                <li class="flex items-center">
+                                    <svg class="w-4 h-4 mr-2 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                                    </svg>
+                                    <span class="text-slate-300">Hurto (980 casos)</span>
+                                </li>
+                                <li class="flex items-center">
+                                    <svg class="w-4 h-4 mr-2 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                                    </svg>
+                                    <span class="text-slate-300">Robo con violencia (750 casos)</span>
+                                </li>
+                            </ul>
+                            <a href="https://raw.githubusercontent.com/Sud-Austral/LIBERTAD_STOP/refs/heads/main/DashboardStop2/SEMANA%2001-2025/Comuna%20Aisen_SEMANA%2001-2025.pdf" class="mt-4 inline-block w-full bg-indigo-600 text-white font-bold py-2 px-4 rounded-xl shadow-lg hover:bg-indigo-700 transition-colors duration-300 text-center text-sm">Descargar Informe</a>
+                        </div>
+                    </div>
+                    <!-- Tarjeta de Región - Maule -->
+                    <div class="region-card card p-6 rounded-2xl shadow-lg flex flex-col" data-region-name="Maule">
+                        <div class="flex items-center justify-between">
+                            <h3 class="text-2xl font-semibold text-blue-300">Región del Maule</h3>
+                            <svg class="rotate-icon w-6 h-6 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                            </svg>
+                        </div>
+                        <p class="flex-grow text-slate-400 my-4">
+                            Presenta una reducción de dos dígitos en los delitos, lo que demuestra la efectividad de las medidas.
+                            <br><span class="font-bold text-green-400">Variación General: -9.8%</span>
+                        </p>
+                        <div class="expandable-content border-t border-slate-700 pt-4">
+                            <p class="text-lg font-semibold text-slate-300 mb-2">Principales Delitos (Enero-Agosto 2025)</p>
+                            <ul class="text-sm text-slate-400 space-y-2">
+                                <li class="flex items-center">
+                                    <svg class="w-4 h-4 mr-2 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
+                                    </svg>
+                                    <span class="text-slate-300">Violencia intrafamiliar (1050 casos)</span>
+                                </li>
+                                <li class="flex items-center">
+                                    <svg class="w-4 h-4 mr-2 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.121 14.121L19 19m-7-7l7-7m-7 7l-2.879 2.879M12 12L9.121 9.121m0 5.758a3 3 0 10-4.243 4.243 3 3 0 004.243-4.243zm0-5.758a3 3 0 10-4.243-4.243 3 3 0 004.243 4.243z"></path>
+                                    </svg>
+                                    <span class="text-slate-300">Lesiones (900 casos)</span>
+                                </li>
+                                <li class="flex items-center">
+                                    <svg class="w-4 h-4 mr-2 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                                    </svg>
+                                    <span class="text-slate-300">Robo con intimidación (600 casos)</span>
+                                </li>
+                            </ul>
+                            <a href="https://raw.githubusercontent.com/Sud-Austral/LIBERTAD_STOP/refs/heads/main/DashboardStop2/SEMANA%2001-2025/Comuna%20Aisen_SEMANA%2001-2025.pdf" class="mt-4 inline-block w-full bg-indigo-600 text-white font-bold py-2 px-4 rounded-xl shadow-lg hover:bg-indigo-700 transition-colors duration-300 text-center text-sm">Descargar Informe</a>
+                        </div>
+                    </div>
+                    
+                    <!-- Tarjeta de Región - Ñuble -->
+                    <div class="region-card card p-6 rounded-2xl shadow-lg flex flex-col" data-region-name="Ñuble">
+                        <div class="flex items-center justify-between">
+                            <h3 class="text-2xl font-semibold text-blue-300">Región de Ñuble</h3>
+                            <svg class="rotate-icon w-6 h-6 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                            </svg>
+                        </div>
+                        <p class="flex-grow text-slate-400 my-4">
+                            Se alinea con la baja nacional, con una disminución consistente en la delincuencia general.
+                            <br><span class="font-bold text-green-400">Variación General: -12.3%</span>
+                        </p>
+                        <div class="expandable-content border-t border-slate-700 pt-4">
+                            <p class="text-lg font-semibold text-slate-300 mb-2">Principales Delitos (Enero-Agosto 2025)</p>
+                            <ul class="text-sm text-slate-400 space-y-2">
+                                <li class="flex items-center">
+                                    <svg class="w-4 h-4 mr-2 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.121 14.121L19 19m-7-7l7-7m-7 7l-2.879 2.879M12 12L9.121 9.121m0 5.758a3 3 0 10-4.243 4.243 3 3 0 004.243-4.243zm0-5.758a3 3 0 10-4.243-4.243 3 3 0 004.243 4.243z"></path>
+                                    </svg>
+                                    <span class="text-slate-300">Lesiones (850 casos)</span>
+                                </li>
+                                <li class="flex items-center">
+                                    <svg class="w-4 h-4 mr-2 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                                    </svg>
+                                    <span class="text-slate-300">Hurto (750 casos)</span>
+                                </li>
+                                <li class="flex items-center">
+                                    <svg class="w-4 h-4 mr-2 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                                    </svg>
+                                    <span class="text-slate-300">Robo con intimidación (500 casos)</span>
+                                </li>
+                            </ul>
+                            <a href="https://raw.githubusercontent.com/Sud-Austral/LIBERTAD_STOP/refs/heads/main/DashboardStop2/SEMANA%2001-2025/Comuna%20Aisen_SEMANA%2001-2025.pdf" class="mt-4 inline-block w-full bg-indigo-600 text-white font-bold py-2 px-4 rounded-xl shadow-lg hover:bg-indigo-700 transition-colors duration-300 text-center text-sm">Descargar Informe</a>
+                        </div>
+                    </div>
+                    
+                    <!-- Tarjeta de Región - Biobío -->
+                    <div class="region-card card p-6 rounded-2xl shadow-lg flex flex-col" data-region-name="Biobío">
+                        <div class="flex items-center justify-between">
+                            <h3 class="text-2xl font-semibold text-blue-300">Región del Biobío</h3>
+                            <svg class="rotate-icon w-6 h-6 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                            </svg>
+                        </div>
+                        <p class="flex-grow text-slate-400 my-4">
+                            Sigue una tendencia positiva, con una reducción en los delitos totales.
+                            <br><span class="font-bold text-green-400">Variación General: -6.7%</span>
+                        </p>
+                        <div class="expandable-content border-t border-slate-700 pt-4">
+                            <p class="text-lg font-semibold text-slate-300 mb-2">Principales Delitos (Enero-Agosto 2025)</p>
+                            <ul class="text-sm text-slate-400 space-y-2">
+                                <li class="flex items-center">
+                                    <svg class="w-4 h-4 mr-2 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
+                                    </svg>
+                                    <span class="text-slate-300">Violencia intrafamiliar (3200 casos)</span>
+                                </li>
+                                <li class="flex items-center">
+                                    <svg class="w-4 h-4 mr-2 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                                    </svg>
+                                    <span class="text-slate-300">Hurto (2850 casos)</span>
+                                </li>
+                                <li class="flex items-center">
+                                    <svg class="w-4 h-4 mr-2 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                    </svg>
+                                    <span class="text-slate-300">Robo de vehículos (1200 casos)</span>
+                                </li>
+                            </ul>
+                            <a href="https://raw.githubusercontent.com/Sud-Austral/LIBERTAD_STOP/refs/heads/main/DashboardStop2/SEMANA%2001-2025/Comuna%20Aisen_SEMANA%2001-2025.pdf" class="mt-4 inline-block w-full bg-indigo-600 text-white font-bold py-2 px-4 rounded-xl shadow-lg hover:bg-indigo-700 transition-colors duration-300 text-center text-sm">Descargar Informe</a>
+                        </div>
+                    </div>
+                    <!-- Tarjeta de Región - Araucanía -->
+                    <div class="region-card card p-6 rounded-2xl shadow-lg flex flex-col" data-region-name="Araucanía">
+                        <div class="flex items-center justify-between">
+                            <h3 class="text-2xl font-semibold text-red-300">Región de La Araucanía</h3>
+                            <svg class="rotate-icon w-6 h-6 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                            </svg>
+                        </div>
+                        <p class="flex-grow text-slate-400 my-4">
+                            Experimenta un preocupante aumento en homicidios, destacando una vulnerabilidad específica.
+                            <br><span class="font-bold text-red-400">Aumento en Homicidios: +81.3%</span>
+                        </p>
+                        <div class="expandable-content border-t border-slate-700 pt-4">
+                            <p class="text-lg font-semibold text-slate-300 mb-2">Principales Delitos (Enero-Agosto 2025)</p>
+                            <ul class="text-sm text-slate-400 space-y-2">
+                                <li class="flex items-center">
+                                    <svg class="w-4 h-4 mr-2 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4m16 0l-4-4m4 4l-4 4"></path>
+                                    </svg>
+                                    <span class="text-slate-300">Homicidios (35 casos)</span>
+                                </li>
+                                <li class="flex items-center">
+                                    <svg class="w-4 h-4 mr-2 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                                    </svg>
+                                    <span class="text-slate-300">Ley de Control de Armas (450 casos)</span>
+                                </li>
+                                <li class="flex items-center">
+                                    <svg class="w-4 h-4 mr-2 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                                    </svg>
+                                    <span class="text-slate-300">Robo con violencia (800 casos)</span>
+                                </li>
+                            </ul>
+                            <a href="https://raw.githubusercontent.com/Sud-Austral/LIBERTAD_STOP/refs/heads/main/DashboardStop2/SEMANA%2001-2025/Comuna%20Aisen_SEMANA%2001-2025.pdf" class="mt-4 inline-block w-full bg-indigo-600 text-white font-bold py-2 px-4 rounded-xl shadow-lg hover:bg-indigo-700 transition-colors duration-300 text-center text-sm">Descargar Informe</a>
+                        </div>
+                    </div>
+                    
+                    <!-- Tarjeta de Región - Los Ríos -->
+                    <div class="region-card card p-6 rounded-2xl shadow-lg flex flex-col" data-region-name="Los Ríos">
+                        <div class="flex items-center justify-between">
+                            <h3 class="text-2xl font-semibold text-blue-300">Región de Los Ríos</h3>
+                            <svg class="rotate-icon w-6 h-6 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                            </svg>
+                        </div>
+                        <p class="flex-grow text-slate-400 my-4">
+                            Mantiene una sólida tendencia a la baja en la delincuencia general.
+                            <br><span class="font-bold text-green-400">Variación General: -14.0%</span>
+                        </p>
+                        <div class="expandable-content border-t border-slate-700 pt-4">
+                            <p class="text-lg font-semibold text-slate-300 mb-2">Principales Delitos (Enero-Agosto 2025)</p>
+                            <ul class="text-sm text-slate-400 space-y-2">
+                                <li class="flex items-center">
+                                    <svg class="w-4 h-4 mr-2 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                                    </svg>
+                                    <span class="text-slate-300">Hurto (800 casos)</span>
+                                </li>
+                                <li class="flex items-center">
+                                    <svg class="w-4 h-4 mr-2 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.121 14.121L19 19m-7-7l7-7m-7 7l-2.879 2.879M12 12L9.121 9.121m0 5.758a3 3 0 10-4.243 4.243 3 3 0 004.243-4.243zm0-5.758a3 3 0 10-4.243-4.243 3 3 0 004.243 4.243z"></path>
+                                    </svg>
+                                    <span class="text-slate-300">Lesiones (700 casos)</span>
+                                </li>
+                                <li class="flex items-center">
+                                    <svg class="w-4 h-4 mr-2 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                                    </svg>
+                                    <span class="text-slate-300">Robo con violencia (450 casos)</span>
+                                </li>
+                            </ul>
+                            <a href="https://raw.githubusercontent.com/Sud-Austral/DATABASE_MASTER/refs/heads/main/miniBase.csv" class="mt-4 inline-block w-full bg-indigo-600 text-white font-bold py-2 px-4 rounded-xl shadow-lg hover:bg-indigo-700 transition-colors duration-300 text-center text-sm">Descargar Informe</a>
+                        </div>
+                    </div>
+                    
+                    <!-- Tarjeta de Región - Los Lagos -->
+                    <div class="region-card card p-6 rounded-2xl shadow-lg flex flex-col" data-region-name="Los Lagos">
+                        <div class="flex items-center justify-between">
+                            <h3 class="text-2xl font-semibold text-blue-300">Región de Los Lagos</h3>
+                            <svg class="rotate-icon w-6 h-6 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                            </svg>
+                        </div>
+                        <p class="flex-grow text-slate-400 my-4">
+                            Destaca por su considerable reducción en el total de delitos, en línea con la tendencia nacional.
+                            <br><span class="font-bold text-green-400">Variación General: -16.1%</span>
+                        </p>
+                        <div class="expandable-content border-t border-slate-700 pt-4">
+                            <p class="text-lg font-semibold text-slate-300 mb-2">Principales Delitos (Enero-Agosto 2025)</p>
+                            <ul class="text-sm text-slate-400 space-y-2">
+                                <li class="flex items-center">
+                                    <svg class="w-4 h-4 mr-2 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                                    </svg>
+                                    <span class="text-slate-300">Hurto (1500 casos)</span>
+                                </li>
+                                <li class="flex items-center">
+                                    <svg class="w-4 h-4 mr-2 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.121 14.121L19 19m-7-7l7-7m-7 7l-2.879 2.879M12 12L9.121 9.121m0 5.758a3 3 0 10-4.243 4.243 3 3 0 004.243-4.243zm0-5.758a3 3 0 10-4.243-4.243 3 3 0 004.243 4.243z"></path>
+                                    </svg>
+                                    <span class="text-slate-300">Lesiones (1200 casos)</span>
+                                </li>
+                                <li class="flex items-center">
+                                    <svg class="w-4 h-4 mr-2 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                                    </svg>
+                                    <span class="text-slate-300">Robo con fuerza (900 casos)</span>
+                                </li>
+                            </ul>
+                            <a href="https://raw.githubusercontent.com/Sud-Austral/LIBERTAD_STOP/refs/heads/main/DashboardStop2/SEMANA%2001-2025/Comuna%20Aisen_SEMANA%2001-2025.pdf" class="mt-4 inline-block w-full bg-indigo-600 text-white font-bold py-2 px-4 rounded-xl shadow-lg hover:bg-indigo-700 transition-colors duration-300 text-center text-sm">Descargar Informe</a>
+                        </div>
+                    </div>
+                    
+                    <!-- Tarjeta de Región - Aysén -->
+                    <div class="region-card card p-6 rounded-2xl shadow-lg flex flex-col" data-region-name="Aysén">
+                        <div class="flex items-center justify-between">
+                            <h3 class="text-2xl font-semibold text-red-300">Región de Aysén del Gral. Carlos Ibáñez del Campo</h3>
+                            <svg class="rotate-icon w-6 h-6 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                            </svg>
+                        </div>
+                        <p class="flex-grow text-slate-400 my-4">
+                            Con un aumento dramático en homicidios, esta región requiere una atención especial.
+                            <br><span class="font-bold text-red-400">Aumento en Homicidios: +100%</span>
+                        </p>
+                        <div class="expandable-content border-t border-slate-700 pt-4">
+                            <p class="text-lg font-semibold text-slate-300 mb-2">Principales Delitos (Enero-Agosto 2025)</p>
+                            <ul class="text-sm text-slate-400 space-y-2">
+                                <li class="flex items-center">
+                                    <svg class="w-4 h-4 mr-2 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4m16 0l-4-4m4 4l-4 4"></path>
+                                    </svg>
+                                    <span class="text-slate-300">Homicidios (4 casos)</span>
+                                </li>
+                                <li class="flex items-center">
+                                    <svg class="w-4 h-4 mr-2 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
+                                    </svg>
+                                    <span class="text-slate-300">Violencia intrafamiliar (200 casos)</span>
+                                </li>
+                                <li class="flex items-center">
+                                    <svg class="w-4 h-4 mr-2 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path>
+                                    </svg>
+                                    <span class="text-slate-300">Delitos de drogas (150 casos)</span>
+                                </li>
+                            </ul>
+                            <a href="https://raw.githubusercontent.com/Sud-Austral/LIBERTAD_STOP/refs/heads/main/DashboardStop2/SEMANA%2001-2025/Comuna%20Aisen_SEMANA%2001-2025.pdf" class="mt-4 inline-block w-full bg-indigo-600 text-white font-bold py-2 px-4 rounded-xl shadow-lg hover:bg-indigo-700 transition-colors duration-300 text-center text-sm">Descargar Informe</a>
+                        </div>
+                    </div>
+                    
+                    <!-- Tarjeta de Región - Magallanes -->
+                    <div class="region-card card p-6 rounded-2xl shadow-lg flex flex-col" data-region-name="Magallanes">
+                        <div class="flex items-center justify-between">
+                            <h3 class="text-2xl font-semibold text-red-300">Región de Magallanes y de la Antártica Chilena</h3>
+                            <svg class="rotate-icon w-6 h-6 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                            </svg>
+                        </div>
+                        <p class="flex-grow text-slate-400 my-4">
+                            Es una de las pocas excepciones a la tendencia nacional, mostrando un aumento en la delincuencia general.
+                            <br><span class="font-bold text-red-400">Variación General: +8.5%</span>
+                        </p>
+                        <div class="expandable-content border-t border-slate-700 pt-4">
+                            <p class="text-lg font-semibold text-slate-300 mb-2">Principales Delitos (Enero-Agosto 2025)</p>
+                            <ul class="text-sm text-slate-400 space-y-2">
+                                <li class="flex items-center">
+                                    <svg class="w-4 h-4 mr-2 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                                    </svg>
+                                    <span class="text-slate-300">Hurto (500 casos)</span>
+                                </li>
+                                <li class="flex items-center">
+                                    <svg class="w-4 h-4 mr-2 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                                    </svg>
+                                    <span class="text-slate-300">Robo con violencia (300 casos)</span>
+                                </li>
+                                <li class="flex items-center">
+                                    <svg class="w-4 h-4 mr-2 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path>
+                                    </svg>
+                                    <span class="text-slate-300">Delitos de drogas (250 casos)</span>
+                                </li>
+                            </ul>
+                            <a href="https://raw.githubusercontent.com/Sud-Austral/LIBERTAD_STOP/refs/heads/main/DashboardStop2/SEMANA%2001-2025/Comuna%20Aisen_SEMANA%2001-2025.pdf" class="mt-4 inline-block w-full bg-indigo-600 text-white font-bold py-2 px-4 rounded-xl shadow-lg hover:bg-indigo-700 transition-colors duration-300 text-center text-sm">Descargar Informe</a>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+    <footer class="bg-slate-900 p-6 sm:p-8 text-center text-slate-400 text-sm">
+        <div class="container mx-auto">
+            <p>Diseño basado en el "Informe de Análisis de Datos de Delincuencia" del Instituto Libertad.</p>
+            <p class="mt-2">Datos actualizados al 31 de agosto de 2025.</p>
+        </div>
+    </footer>
+    <script>
+        // Data para los gráficos
+        const chartData = {
+            'total': {
+                labels: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago'],
+                values: [8500, 9200, 10500, 9800, 8900, 11000, 9500, 8800]
+            },
+            'violent': {
+                labels: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago'],
+                values: [1200, 1350, 1500, 1400, 1250, 1600, 1300, 1150]
+            },
+            'homicides': {
+                labels: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago'],
+                values: [70, 65, 80, 75, 68, 85, 72, 60]
+            }
+        };
+        const canvas = document.getElementById('chartCanvas');
+        const ctx = canvas.getContext('2d');
+        const padding = 40;
+        let currentAnimationId = null; // To cancel previous animation if a new one starts
+        const drawChart = (data) => {
+            // Cancel any ongoing animation
+            if (currentAnimationId) {
+                cancelAnimationFrame(currentAnimationId);
+            }
+            const duration = 1000; // Animation duration in ms
+            let startTime = null;
+            const animationStep = (timestamp) => {
+                if (!startTime) startTime = timestamp;
+                const progress = Math.min((timestamp - startTime) / duration, 1);
+                // Ease-out function for a smoother stop
+                const easedProgress = 1 - Math.pow(1 - progress, 3); 
+                // Clear the canvas on each frame
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                const chartHeight = canvas.height - 2 * padding;
+                const chartWidth = canvas.width - 2 * padding;
+                const maxValue = Math.max(...data.values);
+                const barWidth = chartWidth / data.values.length;
+                // Draw static elements (axes, labels)
+                // Y Axis line
+                ctx.strokeStyle = '#334155';
+                ctx.beginPath();
+                ctx.moveTo(padding, padding);
+                ctx.lineTo(padding, canvas.height - padding);
+                ctx.stroke();
+                // X Axis line
+                ctx.beginPath();
+                ctx.moveTo(padding, canvas.height - padding);
+                ctx.lineTo(canvas.width - padding, canvas.height - padding);
+                ctx.stroke();
+                // Y Axis labels
+                ctx.fillStyle = '#94a3b8';
+                ctx.font = '12px Inter';
+                for (let i = 0; i <= 4; i++) {
+                    const y = canvas.height - padding - (chartHeight / 4) * i;
+                    const value = Math.round(maxValue / 4) * i;
+                    ctx.fillText(value, 5, y + 5);
+                }
+                // Draw animated bars and X labels
+                ctx.fillStyle = '#3b82f6';
+                data.values.forEach((value, index) => {
+                    const barHeight = (value / maxValue) * chartHeight;
+                    const animatedHeight = barHeight * easedProgress; // Apply easing
+                    const x = padding + index * barWidth + (barWidth / 4);
+                    const y = canvas.height - padding - animatedHeight;
+                    ctx.fillRect(x, y, barWidth / 2, animatedHeight);
+                    // X Axis label
+                    ctx.fillStyle = '#94a3b8';
+                    ctx.textAlign = 'center';
+                    ctx.fillText(data.labels[index], x + barWidth / 4, canvas.height - padding + 20);
+                });
+                if (progress < 1) {
+                    currentAnimationId = requestAnimationFrame(animationStep);
+                } else {
+                    currentAnimationId = null;
+                }
+            };
+            
+            currentAnimationId = requestAnimationFrame(animationStep);
+        };
+        // Escuchadores de eventos para los botones del gráfico
+        document.getElementById('btnTotal').addEventListener('click', () => drawChart(chartData.total));
+        document.getElementById('btnViolent').addEventListener('click', () => drawChart(chartData.violent));
+        document.getElementById('btnHomicides').addEventListener('click', () => drawChart(chartData.homicides));
+        const setCanvasSize = () => {
+            const container = document.querySelector('.chart-container');
+            if (container) {
+                canvas.width = container.clientWidth;
+                canvas.height = container.clientHeight;
+            }
+        };
+        // Evento para el redimensionamiento de la ventana
+        window.addEventListener('resize', () => {
+            setCanvasSize();
+            drawChart(chartData.total); // Redraw with default data on resize
+        });
+        
+        window.onload = setCanvasSize; // Set initial canvas size
+        // --- Animated Counters ---
+        const animateCounter = (el) => {
+            const target = parseFloat(el.dataset.target);
+            const duration = 2000; // 2 seconds
+            const prefix = el.dataset.prefix || '';
+            const suffix = el.dataset.suffix || '';
+            let startTime = null;
+            const step = (timestamp) => {
+                if (!startTime) startTime = timestamp;
+                const progress = Math.min((timestamp - startTime) / duration, 1);
+                
+                let currentValue = progress * target;
+                
+                if (suffix === '%') {
+                    el.textContent = prefix + currentValue.toFixed(1) + suffix;
+                } else {
+                    el.textContent = prefix + Math.floor(currentValue) + suffix;
+                }
+                if (progress < 1) {
+                    requestAnimationFrame(step);
+                } else {
+                    el.textContent = prefix + el.dataset.target + suffix;
+                }
+            };
+            requestAnimationFrame(step);
+        };
+        // --- Intersection Observer to trigger animations on scroll ---
+        const observer = new IntersectionObserver((entries, observerInstance) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    if (entry.target.classList.contains('stat-number')) {
+                        animateCounter(entry.target);
+                        observerInstance.unobserve(entry.target); // Animate only once
+                    }
+                    if (entry.target.id === 'chartCanvas') {
+                        drawChart(chartData.total); // Initial chart draw
+                        observerInstance.unobserve(entry.target); // Animate only once on load
+                    }
+                }
+            });
+        }, { threshold: 0.1 }); // Trigger when 10% of the element is visible
+        // Observe stat numbers and canvas
+        document.querySelectorAll('.stat-number').forEach(el => observer.observe(el));
+        if (canvas) {
+            observer.observe(canvas);
+        }
+        
+        // Lógica para expandir/colapsar las tarjetas de región
+        document.querySelectorAll('.region-card').forEach(card => {
+            card.addEventListener('click', (e) => {
+                // Prevenir que el click en el botón de descarga cierre la tarjeta
+                if (e.target.closest('a')) {
+                    e.stopPropagation();
+                    return;
+                }
+                const content = card.querySelector('.expandable-content');
+                content.classList.toggle('expanded');
+                card.classList.toggle('expanded');
+            });
+        });
+    </script>
+</body>
+</html>

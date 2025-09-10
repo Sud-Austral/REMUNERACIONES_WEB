@@ -82,22 +82,24 @@ async function obtenerRespuesta(pregunta) {
                     https://lmonsalve22.pythonanywhere.com/query/?anyo={año}&organismo_nombre={organismo}&base={Contrato}&mes={Mes}&query={query}
                     Donde
                     año = el año de la consulta, siempre en numerico en formato 4 digitos
-                    organismo = nombre del organismo
-                    base = tipo de contrato
-                    mes= Mes de la consulta, siempre en español y con la letra inicial en mayuscula
+                    organismo = Es un organismo del estado de Chile, puede ser solo uno de los siguientes: ${listaOrganismo} 
+                    base = Es la relaccion contractual, puede ser: Contrata, Contratohonorarios, Planta, Codigotrabajo 
+                    mes= Es el nombre del mes, debe ser solo uno de los siguientes: Julio,Junio,Mayo,Abril,Marzo,Febrero,Enero,Diciembre,Noviembre,Octubre,Septiembre,Agosto
+                    query= es la query definida en la pregunta, puede ser promedio,maximo, minimo, cantidad
+                    IMPORTANTE: puede que cualquier de las propiedades existan o no, no hay problema en tener 1 o 2 o todas
                     Por ejemplo
                     Pregunta
                     ¿cual es el total de trabajadores para la agencia de Eficiencia energetica el setiembre del 23 con contrato de honorarios?
                     año = 2023
-                    organismo = Es un organismo del estado de Chile, puede ser solo uno de los siguientes: ${listaOrganismo}
-                    base = Es la relaccion contractual, puede ser: Contrata, Contratohonorarios, Planta, Codigotrabajo
-                    mes= Es el nombre del mes, debe ser solo uno de los siguientes: Julio,Junio,Mayo,Abril,Marzo,Febrero,Enero,Diciembre,Noviembre,Octubre,Septiembre,Agosto
-                    query= es la query definida en la pregunta, puede ser promedio o maximo
+                    organismo = Agencia Chilena de Eficiencia Energética
+                    base = Contratohonorarios
+                    mes= Septiembre
+                    query= cantidad
                     Query
-                    https://lmonsalve22.pythonanywhere.com/query/?anyo=2023&organismo_nombre=Agencia Chilena de Eficiencia Energética&base=Contratohonorarios&mes=Septiembre&query=promedio
+                    https://lmonsalve22.pythonanywhere.com/query/?anyo=2023&organismo_nombre=Agencia Chilena de Eficiencia Energética&base=Contratohonorarios&mes=Septiembre&query=cantidad
                     Respuesta
                     Para tu respuesta solo debes dar la url de la api, en este caso:
-                    https://lmonsalve22.pythonanywhere.com/query/?anyo=2023&organismo_nombre=Agencia%20Chilena%20de%20Eficiencia%20Energ%C3%A9tica&base=Contratohonorarios&mes=Septiembre&query=promedio
+                    https://lmonsalve22.pythonanywhere.com/query/?anyo=2023&organismo_nombre=Agencia%20Chilena%20de%20Eficiencia%20Energ%C3%A9tica&base=Contratohonorarios&mes=Septiembre&query=cantidad
                     Solo la url y nada mas 
                     Si no existe uno o más variables, de igual manera generaras la url con la informacion que tengas
                     Ejemplo
