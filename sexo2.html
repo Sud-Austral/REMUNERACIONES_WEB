@@ -1,342 +1,269 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tendencias salariales por contrato</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
-    <style>
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #f3f4f6;
-        }
-        canvas {
-            background-color: #ffffff;
-            border: 1px solid #e5e7eb;
-            border-radius: 0.5rem;
-            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Tendencias Sector Público 2022–2025 (Chile)</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/modern-normalize/2.0.0/modern-normalize.min.css" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/chart.js/4.4.1/chart.umd.min.js"></script>
+  <style>
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji"; background: #f7f7fb; color: #111827; }
+    .wrap { max-width: 1200px; margin: 32px auto; padding: 0 16px; }
+    h1 { font-size: 22px; margin: 0 0 8px; }
+    .muted { color:#6b7280; font-size: 13px; margin-bottom: 16px; }
+    .tabs { display:flex; gap:8px; flex-wrap:wrap; margin: 12px 0 16px; }
+    .tab { border:1px solid #d1d5db; background:#f3f4f6; color:#111827; padding:8px 12px; border-radius:8px; cursor:pointer; font-size:14px; }
+    .tab.active { background:#2563eb; color:#fff; border-color:#2563eb; }
+    .grid { display:grid; grid-template-columns: 1fr; gap:14px; }
+    @media (min-width: 900px){ .grid { grid-template-columns: 1fr 1fr; } }
+    .card { background:#fff; border:1px solid #e5e7eb; border-radius:10px; padding:12px; box-shadow: 0 1px 2px rgba(0,0,0,.04); }
+    .card h2 { margin:0 0 8px; font-size:14px; font-weight:600; }
+    canvas { width:100% !important; height:320px !important; }
+    .footer-note { color:#6b7280; font-size:12px; margin-top:10px; }
+  </style>
 </head>
-<body class="p-6">
-    <div id="app" class="p-6 space-y-6 text-gray-900">
-        <h1 class="text-2xl font-bold">Tendencias — Total y por tipo de contrato (marzo 2022–2025)</h1>
-        <p class="text-sm text-gray-600">Pestañas: Total, Contrata, Planta, Honorarios, Cod Trabajo. Incluye medias, relación HH/MM, dotación, masa salarial y % femenino.</p>
-        <div id="tab-buttons" class="flex flex-wrap gap-2"></div>
-        <div id="chart-container" class="space-y-4"></div>
-        <p class="text-xs text-gray-500">Fuente: tabla compartida. Edita el arreglo `base` para ajustar cifras.</p>
+<body>
+  <div class="wrap">
+    <h1>Tendencias — Total y por tipo de contrato (marzo 2022–2025)</h1>
+    <div class="muted">Pestañas: Total, Contrata, Planta, Honorarios, Cod Trabajo. Incluye medias (HH/MM), relación HH/MM, dotación, masa salarial y participación femenina.</div>
+
+    <div class="tabs" id="tabs"></div>
+
+    <div class="grid">
+      <div class="card">
+        <h2>Remuneración media (CLP/mes/persona)</h2>
+        <canvas id="remuChart"></canvas>
+      </div>
+      <div class="card">
+        <h2>Relación HH/MM</h2>
+        <canvas id="ratioChart"></canvas>
+      </div>
+      <div class="card">
+        <h2>Dotación por sexo</h2>
+        <canvas id="dotChart"></canvas>
+      </div>
+      <div class="card">
+        <h2>Masa salarial mensual total (CLP)</h2>
+        <canvas id="masaChart"></canvas>
+        <div class="footer-note">Masa = dotación × remuneración media. Eje Y en trillones (T = 10¹² CLP).</div>
+      </div>
+      <div class="card">
+        <h2>Participación femenina en dotación</h2>
+        <canvas id="partFemChart"></canvas>
+      </div>
     </div>
 
-    <script>
-        // Datos y definiciones
-        const tipos = ['Contrata', 'Planta', 'Honorarios', 'Cod Trabajo'];
-        const base = [
-            { tipo: 'Contrata', anio: 2022, hh: 103911, mm: 185756, mediaHH: 1899664, mediaMM: 1523482 },
-            { tipo: 'Contrata', anio: 2023, hh: 110063, mm: 197863, mediaHH: 2083032, mediaMM: 1681734 },
-            { tipo: 'Contrata', anio: 2024, hh: 122996, mm: 221150, mediaHH: 2150040, mediaMM: 1704080 },
-            { tipo: 'Contrata', anio: 2025, hh: 131205, mm: 243322, mediaHH: 2405409, mediaMM: 1905822 },
-            { tipo: 'Planta', anio: 2022, hh: 63353, mm: 122355, mediaHH: 2048569, mediaMM: 1710828 },
-            { tipo: 'Planta', anio: 2023, hh: 66535, mm: 132501, mediaHH: 2284738, mediaMM: 1940993 },
-            { tipo: 'Planta', anio: 2024, hh: 71157, mm: 142256, mediaHH: 2430967, mediaMM: 2085024 },
-            { tipo: 'Planta', anio: '2025', hh: 71153, mm: 142650, mediaHH: 2577913, mediaMM: 2198437 },
-            { tipo: 'Honorarios', anio: 2022, hh: 45861, mm: 65871, mediaHH: 1445670, mediaMM: 1227958 },
-            { tipo: 'Honorarios', anio: 2023, hh: 45968, mm: 62627, mediaHH: 1447245, mediaMM: 946982 },
-            { tipo: 'Honorarios', anio: 2024, hh: 52649, mm: 71405, mediaHH: 1330993, mediaMM: 1050797 },
-            { tipo: 'Honorarios', anio: 2025, hh: 47129, mm: 58181, mediaHH: 1305797, mediaMM: 1063686 },
-            { tipo: 'Cod Trabajo', anio: 2022, hh: 37187, mm: 101121, mediaHH: 1069926, mediaMM: 869193 },
-            { tipo: 'Cod Trabajo', anio: 2023, hh: 42884, mm: 110608, mediaHH: 1205318, mediaMM: 979579 },
-            { tipo: 'Cod Trabajo', anio: 2024, hh: 47062, mm: 115935, mediaHH: 1292399, mediaMM: 1053792 },
-            { tipo: 'Cod Trabajo', anio: 2025, hh: 45732, mm: 115203, mediaHH: 1457298, mediaMM: 1177047 },
-        ];
-        
-        // Formateadores
-        const currency = v => new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 }).format(v);
-        const pct = v => (v * 100).toFixed(1) + '%';
-        
-        // Estado de la aplicación
-        let currentTab = 'Total';
-        let chartInstances = {};
+    <div class="footer-note">Fuente: tabla compartida. Edita el bloque de datos en el código para ajustar cifras si es necesario.</div>
+  </div>
 
-        // Cálculos de datos
-        const calculateData = () => {
-            const byYear = {};
-            base.forEach(r => {
-                if (!byYear[r.anio]) byYear[r.anio] = { anio: r.anio, hh: 0, mm: 0, sumaHH: 0, sumaMM: 0 };
-                byYear[r.anio].hh += r.hh;
-                byYear[r.anio].mm += r.mm;
-                byYear[r.anio].sumaHH += r.hh * r.mediaHH;
-                byYear[r.anio].sumaMM += r.mm * r.mediaMM;
-            });
-            const totalPorAnio = Object.values(byYear).sort((a, b) => a.anio - b.anio).map(y => ({
-                ...y,
-                mediaHH: y.sumaHH / y.hh,
-                mediaMM: y.sumaMM / y.mm,
-                relacion: (y.sumaHH / y.hh) / (y.sumaMM / y.mm),
-                masaHH: y.sumaHH,
-                masaMM: y.sumaMM,
-                partFem: y.mm / (y.hh + y.mm),
-            }));
+  <script>
+    // --------------------- Datos base (marzo de cada año) ---------------------
+    // Campos: tipo, anio, hh (hombres), mm (mujeres), mediaHH, mediaMM (CLP/mes/persona)
+    const base = [
+      { tipo:'Contrata',   anio:2022, hh:103911, mm:185756, mediaHH:1899664, mediaMM:1523482 },
+      { tipo:'Contrata',   anio:2023, hh:110063, mm:197863, mediaHH:2083032, mediaMM:1681734 },
+      { tipo:'Contrata',   anio:2024, hh:122996, mm:221150, mediaHH:2150040, mediaMM:1704080 },
+      { tipo:'Contrata',   anio:2025, hh:131205, mm:243322, mediaHH:2405409, mediaMM:1905822 },
 
-            const seriesPorTipo = {};
-            tipos.forEach(t => {
-                seriesPorTipo[t] = base
-                    .filter(r => r.tipo === t)
-                    .sort((a, b) => a.anio - b.anio)
-                    .map(r => ({
-                        ...r,
-                        relacion: r.mediaHH / r.mediaMM,
-                        masaHH: r.hh * r.mediaHH,
-                        masaMM: r.mm * r.mediaMM,
-                        partFem: r.mm / (r.hh + r.mm),
-                    }));
-            });
-            return { totalPorAnio, seriesPorTipo };
+      { tipo:'Planta',     anio:2022, hh:63353,  mm:122355, mediaHH:2048569, mediaMM:1710828 },
+      { tipo:'Planta',     anio:2023, hh:66535,  mm:132501, mediaHH:2284738, mediaMM:1940993 },
+      { tipo:'Planta',     anio:2024, hh:71157,  mm:142256, mediaHH:2430967, mediaMM:2085024 },
+      { tipo:'Planta',     anio:2025, hh:71153,  mm:142650, mediaHH:2577913, mediaMM:2198437 },
+
+      { tipo:'Honorarios', anio:2022, hh:45861,  mm:65871,  mediaHH:1445670, mediaMM:1227958 },
+      { tipo:'Honorarios', anio:2023, hh:45968,  mm:62627,  mediaHH:1447245, mediaMM:946982  },
+      { tipo:'Honorarios', anio:2024, hh:52649,  mm:71405,  mediaHH:1330993, mediaMM:1050797 },
+      { tipo:'Honorarios', anio:2025, hh:47129,  mm:58181,  mediaHH:1305797, mediaMM:1063686 },
+
+      { tipo:'Cod Trabajo', anio:2022, hh:37187,  mm:101121, mediaHH:1069926, mediaMM:869193  },
+      { tipo:'Cod Trabajo', anio:2023, hh:42884,  mm:110608, mediaHH:1205318, mediaMM:979579  },
+      { tipo:'Cod Trabajo', anio:2024, hh:47062,  mm:115935, mediaHH:1292399, mediaMM:1053792 },
+      { tipo:'Cod Trabajo', anio:2025, hh:45732,  mm:115203, mediaHH:1457298, mediaMM:1177047 },
+    ];
+
+    const tipos = ['Total', 'Contrata', 'Planta', 'Honorarios', 'Cod Trabajo'];
+    const anios = [2022, 2023, 2024, 2025];
+
+    // --------------------- Utilidades ---------------------
+    const CLP = n => new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 }).format(n);
+    const pct = x => (x*100).toFixed(1) + '%';
+
+    function aggregateTotal() {
+      const byYear = {};
+      base.forEach(r => {
+        if (!byYear[r.anio]) byYear[r.anio] = { anio: r.anio, hh: 0, mm: 0, sumaHH: 0, sumaMM: 0 };
+        byYear[r.anio].hh     += r.hh;
+        byYear[r.anio].mm     += r.mm;
+        byYear[r.anio].sumaHH += r.hh * r.mediaHH;
+        byYear[r.anio].sumaMM += r.mm * r.mediaMM;
+      });
+      return anios.map(a => {
+        const y = byYear[a];
+        const mediaHH = y.sumaHH / y.hh;
+        const mediaMM = y.sumaMM / y.mm;
+        return {
+          anio: a,
+          hh: y.hh,
+          mm: y.mm,
+          mediaHH,
+          mediaMM,
+          relacion: mediaHH / mediaMM,
+          masaHH: y.sumaHH,
+          masaMM: y.sumaMM,
+          partFem: y.mm / (y.hh + y.mm),
         };
+      });
+    }
 
-        const { totalPorAnio, seriesPorTipo } = calculateData();
+    function seriesPorTipo(tipo) {
+      if (tipo === 'Total') return aggregateTotal();
+      return base
+        .filter(r => r.tipo === tipo)
+        .sort((a,b)=>a.anio-b.anio)
+        .map(r => ({
+          anio: r.anio,
+          hh: r.hh,
+          mm: r.mm,
+          mediaHH: r.mediaHH,
+          mediaMM: r.mediaMM,
+          relacion: r.mediaHH / r.mediaMM,
+          masaHH: r.hh * r.mediaHH,
+          masaMM: r.mm * r.mediaMM,
+          partFem: r.mm / (r.hh + r.mm),
+        }));
+    }
 
-        // Funciones de renderizado de gráficos
-        const createChartBlock = (title, innerHtml) => {
-            const block = document.createElement('div');
-            block.className = "bg-white p-4 rounded-lg border shadow-sm";
-            block.innerHTML = `<h2 class="font-semibold mb-2">${title}</h2>` + innerHtml;
-            return block;
-        };
+    // --------------------- Charts ---------------------
+    const ctxRemu  = document.getElementById('remuChart').getContext('2d');
+    const ctxRatio = document.getElementById('ratioChart').getContext('2d');
+    const ctxDot   = document.getElementById('dotChart').getContext('2d');
+    const ctxMasa  = document.getElementById('masaChart').getContext('2d');
+    const ctxPF    = document.getElementById('partFemChart').getContext('2d');
 
-        const renderChart = (chartId, type, data, options) => {
-            if (chartInstances[chartId]) {
-                chartInstances[chartId].destroy();
-            }
-            const ctx = document.getElementById(chartId);
-            if (!ctx) return;
-            chartInstances[chartId] = new Chart(ctx, { type, data, options });
-        };
+    let remuChart, ratioChart, dotChart, masaChart, partFemChart;
 
-        const renderLineChart = (data, title) => {
-            const block = createChartBlock(
-                title + ': Remuneración media (CLP/mes/persona)',
-                `<div style="width: 100%; height: 320px;"><canvas id="mediaChart"></canvas></div>`
-            );
-            document.getElementById('chart-container').appendChild(block);
+    function currencyTick(value) {
+      // Formato compacto: millones
+      return (value/1e6).toFixed(1) + 'M';
+    }
+    function trillionsTick(value) {
+      return (value/1e12).toFixed(1) + 'T';
+    }
 
-            renderChart('mediaChart', 'line', {
-                labels: data.map(d => d.anio),
-                datasets: [
-                    { label: 'Media HH', data: data.map(d => d.mediaHH), borderColor: '#2563eb', borderWidth: 2, tension: 0.4, fill: false },
-                    { label: 'Media MM', data: data.map(d => d.mediaMM), borderColor: '#16a34a', borderWidth: 2, tension: 0.4, fill: false }
-                ]
-            }, {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { position: 'top' },
-                    tooltip: {
-                        callbacks: {
-                            label: (context) => {
-                                const value = context.parsed.y;
-                                return `${context.dataset.label}: ${currency(value)}`;
-                            }
-                        }
-                    }
-                },
-                scales: {
-                    x: {
-                        grid: { display: false }
-                    },
-                    y: {
-                        ticks: {
-                            callback: (value) => value / 1e6 + 'M'
-                        }
-                    }
-                }
-            });
-        };
+    function buildCharts(data) {
+      const labels = data.map(d => d.anio);
 
-        const renderRelacionChart = (data, title) => {
-            const block = createChartBlock(
-                title + ': Relación HH/MM',
-                `<div style="width: 100%; height: 280px;"><canvas id="relacionChart"></canvas></div>`
-            );
-            document.getElementById('chart-container').appendChild(block);
+      // Remuneración media
+      remuChart = new Chart(ctxRemu, {
+        type: 'line',
+        data: {
+          labels,
+          datasets: [
+            { label: 'Media HH', data: data.map(d => d.mediaHH), borderColor: '#2563eb', backgroundColor:'#2563eb22', tension:.3 },
+            { label: 'Media MM', data: data.map(d => d.mediaMM), borderColor: '#16a34a', backgroundColor:'#16a34a22', tension:.3 },
+          ]
+        },
+        options: {
+          responsive: true,
+          plugins: { tooltip: { callbacks: { label: ctx => `${ctx.dataset.label}: ${CLP(ctx.parsed.y)}` } } },
+          scales: { y: { ticks: { callback: currencyTick } } }
+        }
+      });
 
-            renderChart('relacionChart', 'line', {
-                labels: data.map(d => d.anio),
-                datasets: [
-                    { label: 'HH/MM', data: data.map(d => d.relacion), borderColor: '#ef4444', borderWidth: 2, tension: 0.4, fill: false }
-                ]
-            }, {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { position: 'top' },
-                    tooltip: {
-                        callbacks: {
-                            label: (context) => {
-                                const value = context.parsed.y;
-                                return `HH/MM: ${value.toFixed(2)}x`;
-                            }
-                        }
-                    }
-                },
-                scales: {
-                    x: {
-                        grid: { display: false }
-                    },
-                    y: {
-                        min: 1
-                    }
-                }
-            });
-        };
+      // Relación HH/MM
+      ratioChart = new Chart(ctxRatio, {
+        type: 'line',
+        data: {
+          labels,
+          datasets: [
+            { label: 'HH/MM', data: data.map(d => d.relacion), borderColor: '#ef4444', backgroundColor:'#ef444422', tension:.3 }
+          ]
+        },
+        options: {
+          responsive: true,
+          scales: { y: { min: 1, ticks: { callback: v => v.toFixed(2)+'x' } } },
+          plugins: { tooltip: { callbacks: { label: ctx => `HH/MM: ${ctx.parsed.y.toFixed(2)}x` } } }
+        }
+      });
 
-        const renderBarChart = (data, title) => {
-            const block = createChartBlock(
-                title + ': Dotación por sexo',
-                `<div style="width: 100%; height: 280px;"><canvas id="dotacionChart"></canvas></div>`
-            );
-            document.getElementById('chart-container').appendChild(block);
+      // Dotación
+      dotChart = new Chart(ctxDot, {
+        type: 'bar',
+        data: {
+          labels,
+          datasets: [
+            { label: 'HH', data: data.map(d => d.hh), backgroundColor:'#60a5fa' },
+            { label: 'MM', data: data.map(d => d.mm), backgroundColor:'#86efac' }
+          ]
+        },
+        options: { responsive: true, plugins: { legend: { position: 'top' } } }
+      });
 
-            renderChart('dotacionChart', 'bar', {
-                labels: data.map(d => d.anio),
-                datasets: [
-                    { label: 'HH', data: data.map(d => d.hh), backgroundColor: '#60a5fa' },
-                    { label: 'MM', data: data.map(d => d.mm), backgroundColor: '#86efac' }
-                ]
-            }, {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { position: 'top' },
-                    tooltip: { mode: 'index', intersect: false }
-                },
-                scales: {
-                    x: { stacked: false, grid: { display: false } },
-                    y: { stacked: false }
-                }
-            });
-        };
+      // Masa salarial (áreas)
+      masaChart = new Chart(ctxMasa, {
+        type: 'line',
+        data: {
+          labels,
+          datasets: [
+            { label: 'Masa HH', data: data.map(d => d.masaHH), borderColor:'#2563eb', backgroundColor:'#2563eb33', fill:true, tension:.3 },
+            { label: 'Masa MM', data: data.map(d => d.masaMM), borderColor:'#16a34a', backgroundColor:'#16a34a33', fill:true, tension:.3 },
+          ]
+        },
+        options: {
+          responsive: true,
+          scales: { y: { ticks: { callback: trillionsTick } } },
+          plugins: { tooltip: { callbacks: { label: ctx => `${ctx.dataset.label}: ${CLP(ctx.parsed.y)}` } } }
+        }
+      });
 
-        const renderAreaChart = (data, title) => {
-            const block = createChartBlock(
-                title + ': Masa salarial mensual total (HH y MM)',
-                `<div style="width: 100%; height: 320px;"><canvas id="masaChart"></canvas></div>
-                 <p class="text-xs text-gray-500">Nota: Masa = dotación × remuneración media. Se expresa en CLP/mes; el eje Y muestra trillones (1T = 10^12 CLP).</p>`
-            );
-            document.getElementById('chart-container').appendChild(block);
+      // Participación femenina
+      partFemChart = new Chart(ctxPF, {
+        type: 'line',
+        data: {
+          labels,
+          datasets: [
+            { label: '% Mujeres', data: data.map(d => d.partFem), borderColor:'#9333ea', backgroundColor:'#9333ea22', tension:.3 }
+          ]
+        },
+        options: {
+          responsive: true,
+          scales: { y: { min: 0, max: 1, ticks: { callback: v => (v*100).toFixed(0)+'%' } } },
+          plugins: { tooltip: { callbacks: { label: ctx => `% Mujeres: ${pct(ctx.parsed.y)}` } } }
+        }
+      });
+    }
 
-            renderChart('masaChart', 'line', {
-                labels: data.map(d => d.anio),
-                datasets: [
-                    { label: 'Masa HH', data: data.map(d => d.masaHH), borderColor: '#2563eb', backgroundColor: 'rgba(37, 99, 235, 0.2)', borderWidth: 2, fill: true, tension: 0.4 },
-                    { label: 'Masa MM', data: data.map(d => d.masaMM), borderColor: '#16a34a', backgroundColor: 'rgba(22, 163, 74, 0.2)', borderWidth: 2, fill: true, tension: 0.4 }
-                ]
-            }, {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { position: 'top' },
-                    tooltip: {
-                        mode: 'index',
-                        intersect: false,
-                        callbacks: {
-                            label: (context) => {
-                                const value = context.parsed.y;
-                                return `${context.dataset.label}: ${currency(value)}`;
-                            }
-                        }
-                    }
-                },
-                scales: {
-                    x: {
-                        grid: { display: false }
-                    },
-                    y: {
-                        ticks: {
-                            callback: (value) => (value / 1e12).toFixed(1) + 'T'
-                        }
-                    }
-                }
-            });
-        };
+    function destroyCharts() {
+      [remuChart, ratioChart, dotChart, masaChart, partFemChart].forEach(ch => ch && ch.destroy());
+    }
 
-        const renderPartFemChart = (data, title) => {
-            const block = createChartBlock(
-                title + ': Participación femenina en dotación',
-                `<div style="width: 100%; height: 260px;"><canvas id="partFemChart"></canvas></div>`
-            );
-            document.getElementById('chart-container').appendChild(block);
+    // --------------------- Tabs ---------------------
+    const tabsEl = document.getElementById('tabs');
+    let currentTab = 'Total';
 
-            renderChart('partFemChart', 'line', {
-                labels: data.map(d => d.anio),
-                datasets: [
-                    { label: '% Mujeres', data: data.map(d => d.partFem), borderColor: '#9333ea', borderWidth: 2, tension: 0.4, fill: false }
-                ]
-            }, {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { position: 'top' },
-                    tooltip: {
-                        callbacks: {
-                            label: (context) => {
-                                const value = context.parsed.y;
-                                return `Participación femenina: ${pct(value)}`;
-                            }
-                        }
-                    }
-                },
-                scales: {
-                    x: {
-                        grid: { display: false }
-                    },
-                    y: {
-                        min: 0,
-                        max: 1,
-                        ticks: {
-                            callback: (value) => (value * 100).toFixed(0) + '%'
-                        }
-                    }
-                }
-            });
-        };
+    function renderTabs() {
+      tabsEl.innerHTML = '';
+      tipos.forEach(t => {
+        const btn = document.createElement('button');
+        btn.className = 'tab' + (t === currentTab ? ' active' : '');
+        btn.textContent = t;
+        btn.onclick = () => switchTab(t);
+        tabsEl.appendChild(btn);
+      });
+    }
 
-        const renderAllCharts = (data, title, mostrarDotacion = true) => {
-            const container = document.getElementById('chart-container');
-            container.innerHTML = '';
-            
-            renderLineChart(data, title);
-            renderRelacionChart(data, title);
-            if (mostrarDotacion) {
-                renderBarChart(data, title);
-            }
-            renderAreaChart(data, title);
-            renderPartFemChart(data, title);
-        };
-        
-        // Función principal de renderizado
-        const renderApp = () => {
-            const tabButtonsContainer = document.getElementById('tab-buttons');
-            tabButtonsContainer.innerHTML = '';
-            ['Total', ...tipos].forEach(t => {
-                const button = document.createElement('button');
-                button.textContent = t;
-                button.className = (t === currentTab ? 'bg-blue-600 text-white ' : 'bg-gray-100 text-gray-800 ') + 'px-3 py-1.5 rounded-lg border';
-                button.addEventListener('click', () => {
-                    currentTab = t;
-                    renderApp();
-                });
-                tabButtonsContainer.appendChild(button);
-            });
-            
-            const dataToDisplay = currentTab === 'Total' ? totalPorAnio : seriesPorTipo[currentTab];
-            const title = currentTab === 'Total' ? 'Total sector público' : currentTab;
-            renderAllCharts(dataToDisplay, title, currentTab === 'Total');
-        };
+    function switchTab(tab) {
+      if (tab === currentTab) return;
+      currentTab = tab;
+      renderTabs();
+      const data = seriesPorTipo(currentTab);
+      destroyCharts();
+      buildCharts(data);
+    }
 
-        // Iniciar la aplicación
-        window.onload = renderApp;
-    </script>
+    // Inicialización
+    renderTabs();
+    buildCharts(seriesPorTipo(currentTab));
+  </script>
 </body>
 </html>
