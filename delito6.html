@@ -1,0 +1,1270 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Informe de Análisis de Delincuencia</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0f172a;
+            color: #e2e8f0;
+            overflow-x: hidden;
+        }
+        .container {
+            max-width: 1200px;
+        }
+        .gradient-text {
+            background-image: linear-gradient(135deg, #6366f1, #3b82f6, #8b5cf6);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            background-size: 200% auto;
+            animation: gradient 3s ease infinite;
+        }
+        @keyframes gradient {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        .card {
+            background-color: #1e293b;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            position: relative;
+            overflow: hidden;
+        }
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(59, 130, 246, 0.05) 100%);
+            z-index: 0;
+        }
+        .card > * {
+            position: relative;
+            z-index: 1;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
+            border-color: rgba(99, 102, 241, 0.3);
+        }
+        .stat-card {
+            min-height: 140px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 1.5rem;
+        }
+        .region-card {
+            min-height: 250px;
+            cursor: pointer;
+            overflow: hidden;
+        }
+        .expandable-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.5s ease-in-out, padding 0.3s ease;
+        }
+        .expandable-content.expanded {
+            max-height: 500px;
+            padding-top: 1rem;
+        }
+        .rotate-icon {
+            transition: transform 0.3s ease;
+        }
+        .expanded .rotate-icon {
+            transform: rotate(180deg);
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            height: 350px;
+            margin-top: 2rem;
+        }
+        canvas {
+            background-color: #1e293b;
+            border-radius: 12px;
+            padding: 0;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        .bar {
+            background-color: #3b82f6;
+            transition: height 0.5s ease-in-out;
+        }
+        .stat-icon {
+            width: 60px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            margin-bottom: 1rem;
+        }
+        .stat-icon.positive {
+            background: rgba(16, 185, 129, 0.15);
+            color: #10b981;
+        }
+        .stat-icon.negative {
+            background: rgba(239, 68, 68, 0.15);
+            color: #ef4444;
+        }
+        .stat-icon.neutral {
+            background: rgba(245, 158, 11, 0.15);
+            color: #f59e0b;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #6366f1, #3b82f6);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            z-index: 1;
+        }
+        .btn-primary::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #4f46e5, #2563eb);
+            z-index: -1;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        .btn-primary:hover::before {
+            opacity: 1;
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(99, 102, 241, 0.3);
+        }
+        .region-indicator {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 5px;
+            height: 100%;
+        }
+        .region-indicator.positive {
+            background: linear-gradient(to bottom, #10b981, #059669);
+        }
+        .region-indicator.negative {
+            background: linear-gradient(to bottom, #ef4444, #dc2626);
+        }
+        .region-indicator.neutral {
+            background: linear-gradient(to bottom, #f59e0b, #d97706);
+        }
+        .header-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at 10% 20%, rgba(99, 102, 241, 0.1) 0%, rgba(15, 23, 42, 0) 60%);
+            z-index: 0;
+        }
+        .stat-number {
+            font-weight: 800;
+            letter-spacing: -0.02em;
+        }
+        .section-title {
+            position: relative;
+            display: inline-block;
+        }
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 0;
+            width: 60px;
+            height: 4px;
+            background: linear-gradient(90deg, #6366f1, #3b82f6);
+            border-radius: 2px;
+        }
+        .data-point {
+            display: flex;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            transition: transform 0.2s ease;
+        }
+        .data-point:hover {
+            transform: translateX(5px);
+        }
+        .data-point i {
+            margin-right: 0.75rem;
+            opacity: 0.8;
+        }
+        .footer {
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        .logo-container {
+            transition: all 0.3s ease;
+        }
+        .logo-container:hover {
+            transform: scale(1.05);
+        }
+        @media (max-width: 768px) {
+            .chart-container {
+                height: 250px;
+            }
+            .stat-card {
+                min-height: 120px;
+                padding: 1rem;
+            }
+            .stat-icon {
+                width: 50px;
+                height: 50px;
+            }
+            .header-logo {
+                height: 40px;
+            }
+        }
+    </style>
+</head>
+<body class="flex flex-col min-h-screen">
+    <header class="bg-slate-900 p-6 sm:p-8 shadow-lg relative">
+        <div class="header-bg"></div>
+        <div class="container mx-auto relative z-10">
+            <div class="flex flex-col md:flex-row items-center justify-between">
+                <div class="flex items-center mb-4 md:mb-0">
+                    <i class="fas fa-chart-line text-indigo-500 text-3xl mr-3"></i>
+                    <h1 class="text-3xl sm:text-4xl font-bold gradient-text">Análisis de la Delincuencia en Chile</h1>
+                </div>
+                <div class="logo-container">
+                    <img src="https://institutolibertad.cl/wp-content/uploads/2022/04/logo_il.png" alt="Instituto Libertad" class="header-logo h-16 md:h-20">
+                </div>
+            </div>
+            <p class="text-slate-400 text-center mt-4 text-sm sm:text-base">Tendencias Nacionales y Regionales (Enero-Agosto 2023-2025)</p>
+        </div>
+    </header>
+    <!-- Sección de Bienvenida -->
+    <section class="p-4 sm:p-8">
+        <div class="container mx-auto">
+            <div class="bg-slate-800 p-6 sm:p-8 rounded-2xl shadow-xl border border-slate-700">
+                <h2 class="text-xl sm:text-2xl font-semibold mb-4 section-title">Bienvenido a la Plataforma de Análisis Delictual</h2>
+                <p class="text-slate-300 text-lg">Este sitio presenta un resumen ejecutivo y un análisis detallado de las tendencias de la delincuencia en Chile, cubriendo el período <strong>Enero-Agosto 2023-2025</strong>. Los datos provienen del <strong>Instituto Libertad</strong>, con base en la información oficial de la Plataforma Informática Ley S.T.O.P. de Carabineros de Chile. Nuestro objetivo es ofrecer una visión clara y accesible sobre la situación de seguridad en el país, con un panorama nacional y un desglose por cada región.</p>
+            </div>
+        </div>
+    </section>
+    <main class="flex-grow p-4 sm:p-8">
+        <div class="container mx-auto">
+            
+            <!-- Sección de Resumen Nacional -->
+            <section class="mb-12">
+                <div class="bg-slate-800 p-6 sm:p-8 rounded-2xl shadow-xl border border-slate-700">
+                    <h2 class="text-xl sm:text-2xl font-semibold mb-6 section-title">Panorama Nacional</h2>
+                    <p class="text-slate-300 text-lg mb-8">El análisis nacional muestra una tendencia positiva en la mayoría de los indicadores, con una notable reducción en los delitos violentos.</p>
+                    
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                        <!-- Card 1: Reducción Total -->
+                        <div class="card p-6 rounded-2xl shadow-md stat-card">
+                            <div class="stat-icon positive">
+                                <i class="fas fa-arrow-trend-down text-2xl"></i>
+                            </div>
+                            <span class="stat-number text-3xl sm:text-5xl font-extrabold text-green-400 mb-2" data-target="-9.1" data-suffix="%">0%</span>
+                            <p class="text-slate-300 font-medium">Reducción en Delitos Totales</p>
+                            <span class="text-sm text-slate-500 mt-1">(2023-2025)</span>
+                        </div>
+                        
+                        <!-- Card 2: Delitos Violentos -->
+                        <div class="card p-6 rounded-2xl shadow-md stat-card">
+                            <div class="stat-icon positive">
+                                <i class="fas fa-shield-halved text-2xl"></i>
+                            </div>
+                            <span class="stat-number text-3xl sm:text-5xl font-extrabold text-green-400 mb-2" data-target="-17.4" data-suffix="%">0%</span>
+                            <p class="text-slate-300 font-medium">Reducción en Robos con Violencia</p>
+                        </div>
+                        
+                        <!-- Card 3: Aumento en Ley de Armas -->
+                        <div class="card p-6 rounded-2xl shadow-md stat-card">
+                            <div class="stat-icon negative">
+                                <i class="fas fa-gun text-2xl"></i>
+                            </div>
+                            <span class="stat-number text-3xl sm:text-5xl font-extrabold text-red-400 mb-2" data-target="62" data-prefix="+" data-suffix="%">0%</span>
+                            <p class="text-slate-300 font-medium">Aumento en Ley de Control de Armas</p>
+                        </div>
+                        
+                        <!-- Card 4: Estabilidad en Homicidios -->
+                        <div class="card p-6 rounded-2xl shadow-md stat-card">
+                            <div class="stat-icon neutral">
+                                <i class="fas fa-balance-scale text-2xl"></i>
+                            </div>
+                            <span class="stat-number text-3xl sm:text-5xl font-extrabold text-yellow-400 mb-2" data-target="596">0</span>
+                            <p class="text-slate-300 font-medium">Casos de Homicidios en 2025</p>
+                            <span class="text-sm text-slate-500 mt-1">(Sin variación significativa)</span>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-12 chart-container">
+                        <canvas id="chartCanvas" class="w-full"></canvas>
+                    </div>
+                    
+                    <!-- Botones para controlar el tipo de gráfico -->
+                    <div class="mt-6 flex flex-wrap justify-center gap-4">
+                        <button id="btnTotal" class="btn-primary text-white font-bold py-3 px-6 rounded-xl shadow-lg text-base">
+                            <i class="fas fa-chart-bar mr-2"></i> Delitos Totales
+                        </button>
+                        <button id="btnViolent" class="btn-primary text-white font-bold py-3 px-6 rounded-xl shadow-lg text-base">
+                            <i class="fas fa-hand-fist mr-2"></i> Robos con Violencia
+                        </button>
+                        <button id="btnHomicides" class="btn-primary text-white font-bold py-3 px-6 rounded-xl shadow-lg text-base">
+                            <i class="fas fa-skull-crossbones mr-2"></i> Homicidios
+                        </button>
+                    </div>
+                    
+                    <div class="mt-8 text-center">
+                        <a href="https://raw.githubusercontent.com/Sud-Austral/LEY_STOP_REPOSITORY/refs/heads/main/enero_agosto/Ley%20STOP%20Enero-Agosto%20Nacional.pdf" class="btn-primary inline-block w-full sm:w-auto text-white font-bold py-3 px-8 rounded-xl shadow-lg text-base">
+                            <i class="fas fa-file-pdf mr-2"></i> Descargar Informe Nacional
+                        </a>
+                    </div>
+                </div>
+            </section>
+            <!-- Sección de Vista Regional -->
+            <section>
+                <h2 class="text-xl sm:text-2xl font-semibold mb-6 section-title">Resultados por Región</h2>
+                <p class="text-slate-300 text-lg mb-8">Haga clic en una región para ver un resumen detallado. Puede descargar el informe completo para un análisis más exhaustivo.</p>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <!-- Tarjeta de Región - Arica y Parinacota -->
+                    <div class="region-card card p-6 rounded-2xl shadow-lg flex flex-col" data-region-name="Arica y Parinacota">
+                        <div class="region-indicator positive"></div>
+                        <div class="flex items-center justify-between">
+                            <h3 class="text-xl font-semibold text-blue-300">Región de Arica y Parinacota</h3>
+                            <svg class="rotate-icon w-6 h-6 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                            </svg>
+                        </div>
+                        <p class="flex-grow text-slate-400 my-4">
+                            Se alinea con la tendencia nacional a la baja, mostrando una reducción en la delincuencia general.
+                            <br><span class="font-bold text-green-400">Variación General: -14.6%</span>
+                        </p>
+                        <div class="expandable-content border-t border-slate-700 pt-4">
+                            <p class="text-lg font-semibold text-slate-300 mb-3">Principales Delitos (Enero-Agosto 2025)</p>
+                            <div class="space-y-2">
+                                <div class="data-point">
+                                    <i class="fas fa-house-crack text-yellow-400"></i>
+                                    <span class="text-slate-300">Violencia Intrafamiliar (1.448 casos)</span>
+                                </div>
+                                <div class="data-point">
+                                    <i class="fas fa-wine-bottle text-amber-400"></i>
+                                    <span class="text-slate-300">Consumo Alcohol y Drogas (1.249 casos)</span>
+                                </div>
+                                <div class="data-point">
+                                    <i class="fas fa-hand-fist text-red-400"></i>
+                                    <span class="text-slate-300">Amenazas y Riñas (1.149 casos)</span>
+                                </div>
+                                <div class="data-point">
+                                    <i class="fas fa-car-side text-blue-400"></i>
+                                    <span class="text-slate-300">Robos de Vehículos y Accesorios (1.131 casos)</span>
+                                </div>
+                                <div class="data-point">
+                                    <i class="fas fa-hammer text-blue-400"></i>
+                                    <span class="text-slate-300">Daños (1.093 casos)</span>
+                                </div>
+                            </div>
+                            <a href="https://raw.githubusercontent.com/Sud-Austral/LEY_STOP_REPOSITORY/refs/heads/main/enero_agosto/Ley%20STOP%20Enero-Agosto%20Regi%C3%B3n%20Arica%20y%20Parinacota.pdf" class="mt-4 btn-primary inline-block w-full text-white font-bold py-2 px-4 rounded-xl shadow-lg text-center text-sm">
+                                <i class="fas fa-download mr-2"></i> Descargar Informe
+                            </a>
+                        </div>
+                    </div>
+                    
+                    <!-- Tarjeta de Región - Tarapacá -->
+                    <div class="region-card card p-6 rounded-2xl shadow-lg flex flex-col" data-region-name="Tarapacá">
+                        <div class="region-indicator positive"></div>
+                        <div class="flex items-center justify-between">
+                            <h3 class="text-xl font-semibold text-blue-300">Región de Tarapacá</h3>
+                            <svg class="rotate-icon w-6 h-6 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                            </svg>
+                        </div>
+                        <p class="flex-grow text-slate-400 my-4">
+                            Se alinea con la tendencia nacional a la baja, con una reducción significativa en sus delitos totales.
+                            <br><span class="font-bold text-green-400">Variación General: -20.4%</span>
+                        </p>
+                        <div class="expandable-content border-t border-slate-700 pt-4">
+                            <p class="text-lg font-semibold text-slate-300 mb-3">Principales Delitos (Enero-Agosto 2025)</p>
+                            <div class="space-y-2">
+                                <div class="data-point">
+                                    <i class="fas fa-house-crack text-yellow-400"></i>
+                                    <span class="text-slate-300">Violencia Intrafamiliar (2.807 casos)</span>
+                                </div>
+                                <div class="data-point">
+                                    <i class="fas fa-hand-fist text-red-400"></i>
+                                    <span class="text-slate-300">Amenazas y Riñas (1.785 casos)</span>
+                                </div>
+                                <div class="data-point">
+                                    <i class="fas fa-hammer text-blue-400"></i>
+                                    <span class="text-slate-300">Daños (1.461 casos)</span>
+                                </div>
+                                <div class="data-point">
+                                    <i class="fas fa-car-side text-blue-400"></i>
+                                    <span class="text-slate-300">Robos de Vehículos y Accesorios (1.227 casos)</span>
+                                </div>
+                                <div class="data-point">
+                                    <i class="fas fa-hand-holding-dollar text-green-400"></i>
+                                    <span class="text-slate-300">Hurtos (1.153 casos)</span>
+                                </div>
+                            </div>
+                            <a href="https://raw.githubusercontent.com/Sud-Austral/LEY_STOP_REPOSITORY/refs/heads/main/enero_agosto/Ley%20STOP%20Enero-Agosto%20Regi%C3%B3n%20Tarapac%C3%A1.pdf" class="mt-4 btn-primary inline-block w-full text-white font-bold py-2 px-4 rounded-xl shadow-lg text-center text-sm">
+                                <i class="fas fa-download mr-2"></i> Descargar Informe
+                            </a>
+                        </div>
+                    </div>
+                    
+                    <!-- Tarjeta de Región - Antofagasta -->
+                    <div class="region-card card p-6 rounded-2xl shadow-lg flex flex-col" data-region-name="Antofagasta">
+                        <div class="region-indicator positive"></div>
+                        <div class="flex items-center justify-between">
+                            <h3 class="text-xl font-semibold text-blue-300">Región de Antofagasta</h3>
+                            <svg class="rotate-icon w-6 h-6 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                            </svg>
+                        </div>
+                        <p class="flex-grow text-slate-400 my-4">
+                            Muestra una tendencia positiva, con una baja significativa en los delitos generales.
+                            <br><span class="font-bold text-green-400">Variación General: -12.9%</span>
+                        </p>
+                        <div class="expandable-content border-t border-slate-700 pt-4">
+                            <p class="text-lg font-semibold text-slate-300 mb-3">Principales Delitos (Enero-Agosto 2025)</p>
+                            <div class="space-y-2">
+                                <div class="data-point">
+                                    <i class="fas fa-wine-bottle text-amber-400"></i>
+                                    <span class="text-slate-300">Consumo Alcohol y Drogas (3.626 casos)</span>
+                                </div>
+                                <div class="data-point">
+                                    <i class="fas fa-house-crack text-yellow-400"></i>
+                                    <span class="text-slate-300">Violencia Intrafamiliar (3.347 casos)</span>
+                                </div>
+                                <div class="data-point">
+                                    <i class="fas fa-hand-holding-dollar text-green-400"></i>
+                                    <span class="text-slate-300">Hurtos (3.131 casos)</span>
+                                </div>
+                                <div class="data-point">
+                                    <i class="fas fa-hand-fist text-red-400"></i>
+                                    <span class="text-slate-300">Amenazas y Riñas (2.964 casos)</span>
+                                </div>
+                                <div class="data-point">
+                                    <i class="fas fa-hammer text-blue-400"></i>
+                                    <span class="text-slate-300">Daños (2.458 casos)</span>
+                                </div>
+                            </div>
+                            <a href="https://raw.githubusercontent.com/Sud-Austral/LEY_STOP_REPOSITORY/refs/heads/main/enero_agosto/Ley%20STOP%20Enero-Agosto%20Regi%C3%B3n%20Antofagasta.pdf" class="mt-4 btn-primary inline-block w-full text-white font-bold py-2 px-4 rounded-xl shadow-lg text-center text-sm">
+                                <i class="fas fa-download mr-2"></i> Descargar Informe
+                            </a>
+                        </div>
+                    </div>
+                    
+                    <!-- Tarjeta de Región - Atacama -->
+                    <div class="region-card card p-6 rounded-2xl shadow-lg flex flex-col" data-region-name="Atacama">
+                        <div class="region-indicator positive"></div>
+                        <div class="flex items-center justify-between">
+                            <h3 class="text-xl font-semibold text-blue-300">Región de Atacama</h3>
+                            <svg class="rotate-icon w-6 h-6 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                            </svg>
+                        </div>
+                        <p class="flex-grow text-slate-400 my-4">
+                            Sigue la tendencia nacional con una notable reducción general en delitos.
+                            <br><span class="font-bold text-green-400">Variación General: -22.1%</span>
+                        </p>
+                        <div class="expandable-content border-t border-slate-700 pt-4">
+                            <p class="text-lg font-semibold text-slate-300 mb-3">Principales Delitos (Enero-Agosto 2025)</p>
+                            <div class="space-y-2">
+                                <div class="data-point">
+                                    <i class="fas fa-hammer text-blue-400"></i>
+                                    <span class="text-slate-300">Daños (1.509 casos)</span>
+                                </div>
+                                <div class="data-point">
+                                    <i class="fas fa-house-crack text-yellow-400"></i>
+                                    <span class="text-slate-300">Violencia Intrafamiliar (1.335 casos)</span>
+                                </div>
+                                <div class="data-point">
+                                    <i class="fas fa-hand-fist text-red-400"></i>
+                                    <span class="text-slate-300">Amenazas y Riñas (1.317 casos)</span>
+                                </div>
+                                <div class="data-point">
+                                    <i class="fas fa-home text-blue-400"></i>
+                                    <span class="text-slate-300">Robos en Lugares Habitados (1.049 casos)</span>
+                                </div>
+                                <div class="data-point">
+                                    <i class="fas fa-car-side text-blue-400"></i>
+                                    <span class="text-slate-300">Robos de Vehículos y Accesorios (951 casos)</span>
+                                </div>
+                            </div>
+                            <a href="https://raw.githubusercontent.com/Sud-Austral/LEY_STOP_REPOSITORY/refs/heads/main/enero_agosto/Ley%20STOP%20Enero-Agosto%20Regi%C3%B3n%20Atacama.pdf" class="mt-4 btn-primary inline-block w-full text-white font-bold py-2 px-4 rounded-xl shadow-lg text-center text-sm">
+                                <i class="fas fa-download mr-2"></i> Descargar Informe
+                            </a>
+                        </div>
+                    </div>
+                    
+                    <!-- Tarjeta de Región - Coquimbo -->
+                    <div class="region-card card p-6 rounded-2xl shadow-lg flex flex-col" data-region-name="Coquimbo">
+                        <div class="region-indicator positive"></div>
+                        <div class="flex items-center justify-between">
+                            <h3 class="text-xl font-semibold text-blue-300">Región de Coquimbo</h3>
+                            <svg class="rotate-icon w-6 h-6 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                            </svg>
+                        </div>
+                        <p class="flex-grow text-slate-400 my-4">
+                            Presenta una reducción consistente en los delitos totales y un panorama alentador.
+                            <br><span class="font-bold text-green-400">Variación General: -5.5%</span>
+                        </p>
+                        <div class="expandable-content border-t border-slate-700 pt-4">
+                            <p class="text-lg font-semibold text-slate-300 mb-3">Principales Delitos (Enero-Agosto 2025)</p>
+                            <div class="space-y-2">
+                                <div class="data-point">
+                                    <i class="fas fa-wine-bottle text-amber-400"></i>
+                                    <span class="text-slate-300">Consumo Alcohol y Drogas (4.412 casos)</span>
+                                </div>
+                                <div class="data-point">
+                                    <i class="fas fa-hand-fist text-red-400"></i>
+                                    <span class="text-slate-300">Amenazas y Riñas (4.053 casos)</span>
+                                </div>
+                                <div class="data-point">
+                                    <i class="fas fa-house-crack text-yellow-400"></i>
+                                    <span class="text-slate-300">Violencia Intrafamiliar (3.920 casos)</span>
+                                </div>
+                                <div class="data-point">
+                                    <i class="fas fa-hammer text-blue-400"></i>
+                                    <span class="text-slate-300">Daños (3.815 casos)</span>
+                                </div>
+                                <div class="data-point">
+                                    <i class="fas fa-home text-blue-400"></i>
+                                    <span class="text-slate-300">Robos en Lugares Habitados (3.528 casos)</span>
+                                </div>
+                            </div>
+                            <a href="https://raw.githubusercontent.com/Sud-Austral/LEY_STOP_REPOSITORY/refs/heads/main/enero_agosto/Ley%20STOP%20Enero-Agosto%20Regi%C3%B3n%20Coquimbo.pdf" class="mt-4 btn-primary inline-block w-full text-white font-bold py-2 px-4 rounded-xl shadow-lg text-center text-sm">
+                                <i class="fas fa-download mr-2"></i> Descargar Informe
+                            </a>
+                        </div>
+                    </div>
+                    
+                    <!-- Tarjeta de Región - Valparaíso -->
+                    <div class="region-card card p-6 rounded-2xl shadow-lg flex flex-col" data-region-name="Valparaíso">
+                        <div class="region-indicator positive"></div>
+                        <div class="flex items-center justify-between">
+                            <h3 class="text-xl font-semibold text-blue-300">Región de Valparaíso</h3>
+                            <svg class="rotate-icon w-6 h-6 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                            </svg>
+                        </div>
+                        <p class="flex-grow text-slate-400 my-4">
+                            Mantiene una tendencia positiva, con una reducción en la mayoría de los ilícitos.
+                            <br><span class="font-bold text-green-400">Variación General: -4.2%</span>
+                        </p>
+                        <div class="expandable-content border-t border-slate-700 pt-4">
+                            <p class="text-lg font-semibold text-slate-300 mb-3">Principales Delitos (Enero-Agosto 2025)</p>
+                            <div class="space-y-2">
+                                <div class="data-point">
+                                    <i class="fas fa-hand-fist text-red-400"></i>
+                                    <span class="text-slate-300">Amenazas y Riñas (10.433 casos)</span>
+                                </div>
+                                <div class="data-point">
+                                    <i class="fas fa-house-crack text-yellow-400"></i>
+                                    <span class="text-slate-300">Violencia Intrafamiliar (8.238 casos)</span>
+                                </div>
+                                <div class="data-point">
+                                    <i class="fas fa-wine-bottle text-amber-400"></i>
+                                    <span class="text-slate-300">Consumo Alcohol y Drogas (8.169 casos)</span>
+                                </div>
+                                <div class="data-point">
+                                    <i class="fas fa-hand-holding-dollar text-green-400"></i>
+                                    <span class="text-slate-300">Hurtos (8.133 casos)</span>
+                                </div>
+                                <div class="data-point">
+                                    <i class="fas fa-hammer text-blue-400"></i>
+                                    <span class="text-slate-300">Daños (7.867 casos)</span>
+                                </div>
+                            </div>
+                            <a href="https://raw.githubusercontent.com/Sud-Austral/LEY_STOP_REPOSITORY/refs/heads/main/enero_agosto/Ley%20STOP%20Enero-Agosto%20Regi%C3%B3n%20Valpara%C3%ADso.pdf" class="mt-4 btn-primary inline-block w-full text-white font-bold py-2 px-4 rounded-xl shadow-lg text-center text-sm">
+                                <i class="fas fa-download mr-2"></i> Descargar Informe
+                            </a>
+                        </div>
+                    </div>
+                    
+                    <!-- Tarjeta de Región - Metropolitana de Santiago -->
+                    <div class="region-card card p-6 rounded-2xl shadow-lg flex flex-col" data-region-name="Metropolitana">
+                        <div class="region-indicator positive"></div>
+                        <div class="flex items-center justify-between">
+                            <h3 class="text-xl font-semibold text-blue-300">Región Metropolitana de Santiago</h3>
+                            <svg class="rotate-icon w-6 h-6 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                            </svg>
+                        </div>
+                        <p class="flex-grow text-slate-400 my-4">
+                            Sigue la tendencia nacional, con una baja en el total de delitos, aunque los desafíos persisten.
+                            <br><span class="font-bold text-green-400">Variación General: -7.0%</span>
+                        </p>
+                        <div class="expandable-content border-t border-slate-700 pt-4">
+                            <p class="text-lg font-semibold text-slate-300 mb-3">Principales Delitos (Enero-Agosto 2025)</p>
+                            <div class="space-y-2">
+                                <div class="data-point">
+                                    <i class="fas fa-person-running text-orange-400"></i>
+                                    <span class="text-slate-300">Robos con Violencia e Intimidación (29.793 casos)</span>
+                                </div>
+                                <div class="data-point">
+                                    <i class="fas fa-hand-holding-dollar text-green-400"></i>
+                                    <span class="text-slate-300">Hurtos (29.213 casos)</span>
+                                </div>
+                                <div class="data-point">
+                                    <i class="fas fa-house-crack text-yellow-400"></i>
+                                    <span class="text-slate-300">Violencia Intrafamiliar (26.170 casos)</span>
+                                </div>
+                                <div class="data-point">
+                                    <i class="fas fa-car-side text-blue-400"></i>
+                                    <span class="text-slate-300">Robos de Vehículos y Accesorios (25.607 casos)</span>
+                                </div>
+                                <div class="data-point">
+                                    <i class="fas fa-hammer text-blue-400"></i>
+                                    <span class="text-slate-300">Daños (24.499 casos)</span>
+                                </div>
+                            </div>
+                            <a href="https://raw.githubusercontent.com/Sud-Austral/LEY_STOP_REPOSITORY/refs/heads/main/enero_agosto/Ley%20STOP%20Enero-Agosto%20Regi%C3%B3n%20Metropolitana.pdf" class="mt-4 btn-primary inline-block w-full text-white font-bold py-2 px-4 rounded-xl shadow-lg text-center text-sm">
+                                <i class="fas fa-download mr-2"></i> Descargar Informe
+                            </a>
+                        </div>
+                    </div>
+                    
+                    <!-- Tarjeta de Región - O'Higgins -->
+                    <div class="region-card card p-6 rounded-2xl shadow-lg flex flex-col" data-region-name="O'Higgins">
+                        <div class="region-indicator positive"></div>
+                        <div class="flex items-center justify-between">
+                            <h3 class="text-xl font-semibold text-blue-300">Región del Libertador Gral. B. O'Higgins</h3>
+                            <svg class="rotate-icon w-6 h-6 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                            </svg>
+                        </div>
+                        <p class="flex-grow text-slate-400 my-4">
+                            Se observa una reducción general en los delitos, manteniendo una trayectoria positiva.
+                            <br><span class="font-bold text-green-400">Variación General: -15.6%</span>
+                        </p>
+                        <div class="expandable-content border-t border-slate-700 pt-4">
+                            <p class="text-lg font-semibold text-slate-300 mb-3">Principales Delitos (Enero-Agosto 2025)</p>
+                            <div class="space-y-2">
+                                <div class="data-point">
+                                    <i class="fas fa-hand-fist text-red-400"></i>
+                                    <span class="text-slate-300">Amenazas y Riñas (5.288 casos)</span>
+                                </div>
+                                <div class="data-point">
+                                    <i class="fas fa-house-crack text-yellow-400"></i>
+                                    <span class="text-slate-300">Violencia Intrafamiliar (4.939 casos)</span>
+                                </div>
+                                <div class="data-point">
+                                    <i class="fas fa-wine-bottle text-amber-400"></i>
+                                    <span class="text-slate-300">Consumo Alcohol y Drogas (4.015 casos)</span>
+                                </div>
+                                <div class="data-point">
+                                    <i class="fas fa-hammer text-blue-400"></i>
+                                    <span class="text-slate-300">Daños (4.004 casos)</span>
+                                </div>
+                                <div class="data-point">
+                                    <i class="fas fa-home text-blue-400"></i>
+                                    <span class="text-slate-300">Robos en Lugares Habitados (3.705 casos)</span>
+                                </div>
+                            </div>
+                            <a href="https://raw.githubusercontent.com/Sud-Austral/LEY_STOP_REPOSITORY/refs/heads/main/enero_agosto/Ley%20STOP%20Enero-Agosto%20Regi%C3%B3n%20O'Higgins.pdf" class="mt-4 btn-primary inline-block w-full text-white font-bold py-2 px-4 rounded-xl shadow-lg text-center text-sm">
+                                <i class="fas fa-download mr-2"></i> Descargar Informe
+                            </a>
+                        </div>
+                    </div>
+                    
+                    <!-- Tarjeta de Región - Maule -->
+                    <div class="region-card card p-6 rounded-2xl shadow-lg flex flex-col" data-region-name="Maule">
+                        <div class="region-indicator positive"></div>
+                        <div class="flex items-center justify-between">
+                            <h3 class="text-xl font-semibold text-blue-300">Región del Maule</h3>
+                            <svg class="rotate-icon w-6 h-6 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                            </svg>
+                        </div>
+                        <p class="flex-grow text-slate-400 my-4">
+                            Presenta una reducción de dos dígitos en los delitos, lo que demuestra la efectividad de las medidas.
+                            <br><span class="font-bold text-green-400">Variación General: -11.3%</span>
+                        </p>
+                        <div class="expandable-content border-t border-slate-700 pt-4">
+                            <p class="text-lg font-semibold text-slate-300 mb-3">Principales Delitos (Enero-Agosto 2025)</p>
+                            <div class="space-y-2">
+                                <div class="data-point">
+                                    <i class="fas fa-house-crack text-yellow-400"></i>
+                                    <span class="text-slate-300">Violencia Intrafamiliar (5.969 casos)</span>
+                                </div>
+                                <div class="data-point">
+                                    <i class="fas fa-hand-fist text-red-400"></i>
+                                    <span class="text-slate-300">Amenazas y Riñas (5.410 casos)</span>
+                                </div>
+                                <div class="data-point">
+                                    <i class="fas fa-hammer text-blue-400"></i>
+                                    <span class="text-slate-300">Daños (5.091 casos)</span>
+                                </div>
+                                <div class="data-point">
+                                    <i class="fas fa-home text-blue-400"></i>
+                                    <span class="text-slate-300">Robos en Lugares Habitados (3.569 casos)</span>
+                                </div>
+                                <div class="data-point">
+                                    <i class="fas fa-hand-holding-dollar text-green-400"></i>
+                                    <span class="text-slate-300">Hurtos (3.212 casos)</span>
+                                </div>
+                            </div>
+                            <a href="https://raw.githubusercontent.com/Sud-Austral/LEY_STOP_REPOSITORY/refs/heads/main/enero_agosto/Ley%20STOP%20Enero-Agosto%20Regi%C3%B3n%20Maule.pdf" class="mt-4 btn-primary inline-block w-full text-white font-bold py-2 px-4 rounded-xl shadow-lg text-center text-sm">
+                                <i class="fas fa-download mr-2"></i> Descargar Informe
+                            </a>
+                        </div>
+                    </div>
+                    
+                    <!-- Tarjeta de Región - Ñuble -->
+                    <div class="region-card card p-6 rounded-2xl shadow-lg flex flex-col" data-region-name="Ñuble">
+                        <div class="region-indicator positive"></div>
+                        <div class="flex items-center justify-between">
+                            <h3 class="text-xl font-semibold text-blue-300">Región de Ñuble</h3>
+                            <svg class="rotate-icon w-6 h-6 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                            </svg>
+                        </div>
+                        <p class="flex-grow text-slate-400 my-4">
+                            Se alinea con la baja nacional, con una disminución consistente en la delincuencia general.
+                            <br><span class="font-bold text-green-400">Variación General: -10.9%</span>
+                        </p>
+                        <div class="expandable-content border-t border-slate-700 pt-4">
+                            <p class="text-lg font-semibold text-slate-300 mb-3">Principales Delitos (Enero-Agosto 2025)</p>
+                            <div class="space-y-2">
+                                <div class="data-point">
+                                    <i class="fas fa-hand-fist text-red-400"></i>
+                                    <span class="text-slate-300">Amenazas y Riñas (2.424 casos)</span>
+                                </div>
+                                <div class="data-point">
+                                    <i class="fas fa-house-crack text-yellow-400"></i>
+                                    <span class="text-slate-300">Violencia Intrafamiliar (2.154 casos)</span>
+                                </div>
+                                <div class="data-point">
+                                    <i class="fas fa-hammer text-blue-400"></i>
+                                    <span class="text-slate-300">Daños (2.207 casos)</span>
+                                </div>
+                                <div class="data-point">
+                                    <i class="fas fa-hand-holding-dollar text-green-400"></i>
+                                    <span class="text-slate-300">Hurtos (1.727 casos)</span>
+                                </div>
+                                <div class="data-point">
+                                    <i class="fas fa-home text-blue-400"></i>
+                                    <span class="text-slate-300">Robos en Lugares Habitados (1.707 casos)</span>
+                                </div>
+                            </div>
+                            <a href="https://raw.githubusercontent.com/Sud-Austral/LEY_STOP_REPOSITORY/refs/heads/main/enero_agosto/Ley%20STOP%20Enero-Agosto%20Regi%C3%B3n%20%C3%91uble.pdf" class="mt-4 btn-primary inline-block w-full text-white font-bold py-2 px-4 rounded-xl shadow-lg text-center text-sm">
+                                <i class="fas fa-download mr-2"></i> Descargar Informe
+                            </a>
+                        </div>
+                    </div>
+                    
+                    <!-- Tarjeta de Región - Biobío -->
+                    <div class="region-card card p-6 rounded-2xl shadow-lg flex flex-col" data-region-name="Biobío">
+                        <div class="region-indicator positive"></div>
+                        <div class="flex items-center justify-between">
+                            <h3 class="text-xl font-semibold text-blue-300">Región del Biobío</h3>
+                            <svg class="rotate-icon w-6 h-6 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                            </svg>
+                        </div>
+                        <p class="flex-grow text-slate-400 my-4">
+                            Sigue una tendencia positiva, con una reducción en los delitos totales.
+                            <br><span class="font-bold text-green-400">Variación General: -5.5%</span>
+                        </p>
+                        <div class="expandable-content border-t border-slate-700 pt-4">
+                            <p class="text-lg font-semibold text-slate-300 mb-3">Principales Delitos (Enero-Agosto 2025)</p>
+                            <div class="space-y-2">
+                                <div class="data-point">
+                                    <i class="fas fa-hand-fist text-red-400"></i>
+                                    <span class="text-slate-300">Amenazas y Riñas (4.053 casos)</span>
+                                </div>
+                                <div class="data-point">
+                                    <i class="fas fa-house-crack text-yellow-400"></i>
+                                    <span class="text-slate-300">Violencia Intrafamiliar (3.920 casos)</span>
+                                </div>
+                                <div class="data-point">
+                                    <i class="fas fa-hammer text-blue-400"></i>
+                                    <span class="text-slate-300">Daños (3.815 casos)</span>
+                                </div>
+                                <div class="data-point">
+                                    <i class="fas fa-exclamation-triangle text-orange-400"></i>
+                                    <span class="text-slate-300">Incivilidades (3.423 casos)</span>
+                                </div>
+                                <div class="data-point">
+                                    <i class="fas fa-hand-holding-dollar text-green-400"></i>
+                                    <span class="text-slate-300">Hurtos (2.839 casos)</span>
+                                </div>
+                            </div>
+                            <a href="https://raw.githubusercontent.com/Sud-Austral/LEY_STOP_REPOSITORY/refs/heads/main/enero_agosto/Ley%20STOP%20Enero-Agosto%20Regi%C3%B3n%20Biob%C3%ADo.pdf" class="mt-4 btn-primary inline-block w-full text-white font-bold py-2 px-4 rounded-xl shadow-lg text-center text-sm">
+                                <i class="fas fa-download mr-2"></i> Descargar Informe
+                            </a>
+                        </div>
+                    </div>
+                    
+                    <!-- Tarjeta de Región - Araucanía -->
+                    <div class="region-card card p-6 rounded-2xl shadow-lg flex flex-col" data-region-name="Araucanía">
+                        <div class="region-indicator negative"></div>
+                        <div class="flex items-center justify-between">
+                            <h3 class="text-xl font-semibold text-red-300">Región de La Araucanía</h3>
+                            <svg class="rotate-icon w-6 h-6 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                            </svg>
+                        </div>
+                        <p class="flex-grow text-slate-400 my-4">
+                            Experimenta un preocupante aumento en homicidios, destacando una vulnerabilidad específica.
+                            <br><span class="font-bold text-red-400">Aumento en Homicidios: +81.3%</span>
+                        </p>
+                        <div class="expandable-content border-t border-slate-700 pt-4">
+                            <p class="text-lg font-semibold text-slate-300 mb-3">Principales Delitos (Enero-Agosto 2025)</p>
+                            <div class="space-y-2">
+                                <div class="data-point">
+                                    <i class="fas fa-wine-bottle text-amber-400"></i>
+                                    <span class="text-slate-300">Consumo Alcohol y Drogas (7.806 casos)</span>
+                                </div>
+                                <div class="data-point">
+                                    <i class="fas fa-house-crack text-yellow-400"></i>
+                                    <span class="text-slate-300">Violencia Intrafamiliar (5.328 casos)</span>
+                                </div>
+                                <div class="data-point">
+                                    <i class="fas fa-hand-fist text-red-400"></i>
+                                    <span class="text-slate-300">Amenazas y Riñas (5.027 casos)</span>
+                                </div>
+                                <div class="data-point">
+                                    <i class="fas fa-hammer text-blue-400"></i>
+                                    <span class="text-slate-300">Daños (4.259 casos)</span>
+                                </div>
+                                <div class="data-point">
+                                    <i class="fas fa-hand-holding-dollar text-green-400"></i>
+                                    <span class="text-slate-300">Hurtos (3.855 casos)</span>
+                                </div>
+                            </div>
+                            <a href="https://raw.githubusercontent.com/Sud-Austral/LEY_STOP_REPOSITORY/refs/heads/main/enero_agosto/Ley%20STOP%20Enero-Agosto%20Regi%C3%B3n%20La%20Araucan%C3%ADa.pdf" class="mt-4 btn-primary inline-block w-full text-white font-bold py-2 px-4 rounded-xl shadow-lg text-center text-sm">
+                                <i class="fas fa-download mr-2"></i> Descargar Informe
+                            </a>
+                        </div>
+                    </div>
+                    
+                    <!-- Tarjeta de Región - Los Ríos -->
+                    <div class="region-card card p-6 rounded-2xl shadow-lg flex flex-col" data-region-name="Los Ríos">
+                        <div class="region-indicator positive"></div>
+                        <div class="flex items-center justify-between">
+                            <h3 class="text-xl font-semibold text-blue-300">Región de Los Ríos</h3>
+                            <svg class="rotate-icon w-6 h-6 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                            </svg>
+                        </div>
+                        <p class="flex-grow text-slate-400 my-4">
+                            Mantiene una sólida tendencia a la baja en la delincuencia general.
+                            <br><span class="font-bold text-green-400">Variación General: -11.2%</span>
+                        </p>
+                        <div class="expandable-content border-t border-slate-700 pt-4">
+                            <p class="text-lg font-semibold text-slate-300 mb-3">Principales Delitos (Enero-Agosto 2025)</p>
+                            <div class="space-y-2">
+                                <div class="data-point">
+                                    <i class="fas fa-wine-bottle text-amber-400"></i>
+                                    <span class="text-slate-300">Consumo Alcohol y Drogas (3.595 casos)</span>
+                                </div>
+                                <div class="data-point">
+                                    <i class="fas fa-house-crack text-yellow-400"></i>
+                                    <span class="text-slate-300">Violencia Intrafamiliar (2.011 casos)</span>
+                                </div>
+                                <div class="data-point">
+                                    <i class="fas fa-hand-fist text-red-400"></i>
+                                    <span class="text-slate-300">Amenazas y Riñas (1.988 casos)</span>
+                                </div>
+                                <div class="data-point">
+                                    <i class="fas fa-hammer text-blue-400"></i>
+                                    <span class="text-slate-300">Daños (1.913 casos)</span>
+                                </div>
+                                <div class="data-point">
+                                    <i class="fas fa-hand-holding-dollar text-green-400"></i>
+                                    <span class="text-slate-300">Hurtos (1.753 casos)</span>
+                                </div>
+                            </div>
+                            <a href="https://raw.githubusercontent.com/Sud-Austral/LEY_STOP_REPOSITORY/refs/heads/main/enero_agosto/Ley%20STOP%20Enero-Agosto%20Regi%C3%B3n%20Los%20R%C3%ADos.pdf" class="mt-4 btn-primary inline-block w-full text-white font-bold py-2 px-4 rounded-xl shadow-lg text-center text-sm">
+                                <i class="fas fa-download mr-2"></i> Descargar Informe
+                            </a>
+                        </div>
+                    </div>
+                    
+                    <!-- Tarjeta de Región - Los Lagos -->
+                    <div class="region-card card p-6 rounded-2xl shadow-lg flex flex-col" data-region-name="Los Lagos">
+                        <div class="region-indicator positive"></div>
+                        <div class="flex items-center justify-between">
+                            <h3 class="text-xl font-semibold text-blue-300">Región de Los Lagos</h3>
+                            <svg class="rotate-icon w-6 h-6 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                            </svg>
+                        </div>
+                        <p class="flex-grow text-slate-400 my-4">
+                            Destaca por su considerable reducción en el total de delitos, en línea con la tendencia nacional.
+                            <br><span class="font-bold text-green-400">Variación General: -11.2%</span>
+                        </p>
+                        <div class="expandable-content border-t border-slate-700 pt-4">
+                            <p class="text-lg font-semibold text-slate-300 mb-3">Principales Delitos (Enero-Agosto 2025)</p>
+                            <div class="space-y-2">
+                                <div class="data-point">
+                                    <i class="fas fa-wine-bottle text-amber-400"></i>
+                                    <span class="text-slate-300">Consumo Alcohol y Drogas (6.880 casos)</span>
+                                </div>
+                                <div class="data-point">
+                                    <i class="fas fa-hammer text-blue-400"></i>
+                                    <span class="text-slate-300">Daños (5.239 casos)</span>
+                                </div>
+                                <div class="data-point">
+                                    <i class="fas fa-hand-fist text-red-400"></i>
+                                    <span class="text-slate-300">Amenazas y Riñas (5.083 casos)</span>
+                                </div>
+                                <div class="data-point">
+                                    <i class="fas fa-house-crack text-yellow-400"></i>
+                                    <span class="text-slate-300">Violencia Intrafamiliar (4.540 casos)</span>
+                                </div>
+                                <div class="data-point">
+                                    <i class="fas fa-hand-holding-dollar text-green-400"></i>
+                                    <span class="text-slate-300">Hurtos (4.238 casos)</span>
+                                </div>
+                            </div>
+                            <a href="https://raw.githubusercontent.com/Sud-Austral/LEY_STOP_REPOSITORY/refs/heads/main/enero_agosto/Ley%20STOP%20Enero-Agosto%20Regi%C3%B3n%20Los%20Lagos.pdf" class="mt-4 btn-primary inline-block w-full text-white font-bold py-2 px-4 rounded-xl shadow-lg text-center text-sm">
+                                <i class="fas fa-download mr-2"></i> Descargar Informe
+                            </a>
+                        </div>
+                    </div>
+                    
+                    <!-- Tarjeta de Región - Aysén -->
+                    <div class="region-card card p-6 rounded-2xl shadow-lg flex flex-col" data-region-name="Aysén">
+                        <div class="region-indicator negative"></div>
+                        <div class="flex items-center justify-between">
+                            <h3 class="text-xl font-semibold text-red-300">Región de Aysén del Gral. Carlos Ibáñez del Campo</h3>
+                            <svg class="rotate-icon w-6 h-6 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                            </svg>
+                        </div>
+                        <p class="flex-grow text-slate-400 my-4">
+                            Con un aumento dramático en homicidios, esta región requiere una atención especial.
+                            <br><span class="font-bold text-red-400">Aumento en Homicidios: +100.0%</span>
+                        </p>
+                        <div class="expandable-content border-t border-slate-700 pt-4">
+                            <p class="text-lg font-semibold text-slate-300 mb-3">Principales Delitos (Enero-Agosto 2025)</p>
+                            <div class="space-y-2">
+                                <div class="data-point">
+                                    <i class="fas fa-wine-bottle text-amber-400"></i>
+                                    <span class="text-slate-300">Consumo Alcohol y Drogas (754 casos)</span>
+                                </div>
+                                <div class="data-point">
+                                    <i class="fas fa-house-crack text-yellow-400"></i>
+                                    <span class="text-slate-300">Violencia Intrafamiliar (506 casos)</span>
+                                </div>
+                                <div class="data-point">
+                                    <i class="fas fa-exclamation-triangle text-orange-400"></i>
+                                    <span class="text-slate-300">Incivilidades (401 casos)</span>
+                                </div>
+                                <div class="data-point">
+                                    <i class="fas fa-hand-fist text-red-400"></i>
+                                    <span class="text-slate-300">Amenazas y Riñas (395 casos)</span>
+                                </div>
+                                <div class="data-point">
+                                    <i class="fas fa-hand-holding-dollar text-green-400"></i>
+                                    <span class="text-slate-300">Hurtos (315 casos)</span>
+                                </div>
+                            </div>
+                            <a href="https://raw.githubusercontent.com/Sud-Austral/LEY_STOP_REPOSITORY/refs/heads/main/enero_agosto/Ley%20STOP%20Enero-Agosto%20Regi%C3%B3n%20Ays%C3%A9n.pdf" class="mt-4 btn-primary inline-block w-full text-white font-bold py-2 px-4 rounded-xl shadow-lg text-center text-sm">
+                                <i class="fas fa-download mr-2"></i> Descargar Informe
+                            </a>
+                        </div>
+                    </div>
+                    
+                    <!-- Tarjeta de Región - Magallanes -->
+                    <div class="region-card card p-6 rounded-2xl shadow-lg flex flex-col" data-region-name="Magallanes">
+                        <div class="region-indicator negative"></div>
+                        <div class="flex items-center justify-between">
+                            <h3 class="text-xl font-semibold text-red-300">Región de Magallanes y de la Antártica Chilena</h3>
+                            <svg class="rotate-icon w-6 h-6 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                            </svg>
+                        </div>
+                        <p class="flex-grow text-slate-400 my-4">
+                            Es una de las pocas excepciones a la tendencia nacional, mostrando un aumento en la delincuencia general.
+                            <br><span class="font-bold text-red-400">Variación General: +8.5%</span>
+                        </p>
+                        <div class="expandable-content border-t border-slate-700 pt-4">
+                            <p class="text-lg font-semibold text-slate-300 mb-3">Principales Delitos (Enero-Agosto 2025)</p>
+                            <div class="space-y-2">
+                                <div class="data-point">
+                                    <i class="fas fa-wine-bottle text-amber-400"></i>
+                                    <span class="text-slate-300">Consumo Alcohol y Drogas (921 casos)</span>
+                                </div>
+                                <div class="data-point">
+                                    <i class="fas fa-house-crack text-yellow-400"></i>
+                                    <span class="text-slate-300">Violencia Intrafamiliar (746 casos)</span>
+                                </div>
+                                <div class="data-point">
+                                    <i class="fas fa-hammer text-blue-400"></i>
+                                    <span class="text-slate-300">Daños (587 casos)</span>
+                                </div>
+                                <div class="data-point">
+                                    <i class="fas fa-hand-fist text-red-400"></i>
+                                    <span class="text-slate-300">Amenazas y Riñas (571 casos)</span>
+                                </div>
+                                <div class="data-point">
+                                    <i class="fas fa-hand-holding-dollar text-green-400"></i>
+                                    <span class="text-slate-300">Hurtos (322 casos)</span>
+                                </div>
+                            </div>
+                            <a href="https://raw.githubusercontent.com/Sud-Austral/LEY_STOP_REPOSITORY/refs/heads/main/enero_agosto/Ley%20STOP%20Enero-Agosto%20Regi%C3%B3n%20Magallanes.pdf" class="mt-4 btn-primary inline-block w-full text-white font-bold py-2 px-4 rounded-xl shadow-lg text-center text-sm">
+                                <i class="fas fa-download mr-2"></i> Descargar Informe
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+    <footer class="bg-slate-900 p-6 sm:p-8 text-center text-slate-400 text-sm footer">
+        <div class="container mx-auto">
+            <p>Diseño basado en el "Informe de Análisis de Datos de Delincuencia" del Instituto Libertad.</p>
+            <p class="mt-2">Datos actualizados al 31 de agosto de 2025.</p>
+        </div>
+    </footer>
+    <script>
+        // Data para los gráficos
+        const chartData = {
+            'total': {
+                labels: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago'],
+                values: [95751, 78143, 101021, 75396, 74725, 90246, 76655, 81745]
+            },
+            'violent': {
+                labels: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago'],
+                values: [5981, 5185, 6447, 4823, 4964, 6010, 5021, 4967]
+            },
+            'homicides': {
+                labels: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago'],
+                values: [94, 73, 70, 58, 71, 85, 62, 83]
+            }
+        };
+        
+        const canvas = document.getElementById('chartCanvas');
+        const ctx = canvas.getContext('2d');
+        const padding = 40;
+        let currentAnimationId = null; // To cancel previous animation if a new one starts
+        
+        // Función para formatear números grandes
+        function formatNumber(num) {
+            if (num >= 1000000) {
+                return (num / 1000000).toFixed(1) + 'M';
+            } else if (num >= 1000) {
+                return (num / 1000).toFixed(0) + 'K';
+            }
+            return num.toString();
+        }
+        
+        const drawChart = (data) => {
+            // Cancel any ongoing animation
+            if (currentAnimationId) {
+                cancelAnimationFrame(currentAnimationId);
+            }
+            
+            const duration = 1000; // Animation duration in ms
+            let startTime = null;
+            
+            const animationStep = (timestamp) => {
+                if (!startTime) startTime = timestamp;
+                const progress = Math.min((timestamp - startTime) / duration, 1);
+                
+                // Ease-out function for a smoother stop
+                const easedProgress = 1 - Math.pow(1 - progress, 3); 
+                
+                // Clear the canvas on each frame
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                
+                const chartHeight = canvas.height - 2 * padding;
+                const chartWidth = canvas.width - 2 * padding;
+                const maxValue = Math.max(...data.values);
+                
+                // Calcular el valor máximo para el eje Y según el tipo de datos
+                let adjustedMaxValue;
+                if (data === chartData.homicides) {
+                    // Para homicidios, redondear al próximo múltiplo de 20
+                    adjustedMaxValue = Math.ceil(maxValue / 20) * 20;
+                } else {
+                    // Para otros datos, usar 15% de margen
+                    adjustedMaxValue = maxValue * 1.15;
+                }
+                
+                const barWidth = chartWidth / data.values.length;
+                
+                // Draw static elements (axes, labels)
+                // Y Axis line
+                ctx.strokeStyle = '#334155';
+                ctx.beginPath();
+                ctx.moveTo(padding, padding);
+                ctx.lineTo(padding, canvas.height - padding);
+                ctx.stroke();
+                
+                // X Axis line
+                ctx.beginPath();
+                ctx.moveTo(padding, canvas.height - padding);
+                ctx.lineTo(canvas.width - padding, canvas.height - padding);
+                ctx.stroke();
+                
+                // Y Axis labels
+                ctx.fillStyle = '#94a3b8';
+                ctx.font = '12px Inter';
+                ctx.textAlign = 'right';
+                ctx.textBaseline = 'middle';
+                
+                // Calcular los valores para las etiquetas del eje Y
+                let stepValue;
+                if (data === chartData.homicides) {
+                    // Para homicidios, usar pasos de 20
+                    stepValue = 20;
+                } else {
+                    // Para otros datos, redondear al próximo millar
+                    stepValue = Math.ceil(adjustedMaxValue / 4 / 1000) * 1000;
+                }
+                
+                for (let i = 0; i <= 4; i++) {
+                    const y = canvas.height - padding - (chartHeight / 4) * i;
+                    const value = stepValue * i;
+                    
+                    // Formatear el valor según el tipo de datos
+                    let label;
+                    if (data === chartData.homicides) {
+                        label = value.toString();
+                    } else {
+                        label = formatNumber(value);
+                    }
+                    
+                    ctx.fillText(label, padding - 10, y);
+                }
+                
+                // Draw animated bars and X labels
+                data.values.forEach((value, index) => {
+                    const barHeight = (value / adjustedMaxValue) * chartHeight;
+                    const animatedHeight = barHeight * easedProgress; // Apply easing
+                    
+                    const x = padding + index * barWidth + (barWidth / 4);
+                    const y = canvas.height - padding - animatedHeight;
+                    
+                    // Create gradient for bars
+                    const gradient = ctx.createLinearGradient(0, y, 0, y + animatedHeight);
+                    gradient.addColorStop(0, '#6366f1');
+                    gradient.addColorStop(1, '#3b82f6');
+                    
+                    ctx.fillStyle = gradient;
+                    ctx.fillRect(x, y, barWidth / 2, animatedHeight);
+                    
+                    // X Axis label
+                    ctx.fillStyle = '#94a3b8';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'top';
+                    ctx.fillText(data.labels[index], x + barWidth / 4, canvas.height - padding + 10);
+                });
+                
+                if (progress < 1) {
+                    currentAnimationId = requestAnimationFrame(animationStep);
+                } else {
+                    currentAnimationId = null;
+                }
+            };
+            
+            currentAnimationId = requestAnimationFrame(animationStep);
+        };
+        
+        // Escuchadores de eventos para los botones del gráfico
+        document.getElementById('btnTotal').addEventListener('click', () => drawChart(chartData.total));
+        document.getElementById('btnViolent').addEventListener('click', () => drawChart(chartData.violent));
+        document.getElementById('btnHomicides').addEventListener('click', () => drawChart(chartData.homicides));
+        
+        const setCanvasSize = () => {
+            const container = document.querySelector('.chart-container');
+            if (container) {
+                canvas.width = container.clientWidth;
+                canvas.height = container.clientHeight;
+            }
+        };
+        
+        // Evento para el redimensionamiento de la ventana
+        window.addEventListener('resize', () => {
+            setCanvasSize();
+            drawChart(chartData.total); // Redraw with default data on resize
+        });
+        
+        window.onload = setCanvasSize; // Set initial canvas size
+        
+        // --- Animated Counters ---
+        const animateCounter = (el) => {
+            const target = parseFloat(el.dataset.target);
+            const duration = 2000; // 2 seconds
+            const prefix = el.dataset.prefix || '';
+            const suffix = el.dataset.suffix || '';
+            let startTime = null;
+            
+            const step = (timestamp) => {
+                if (!startTime) startTime = timestamp;
+                const progress = Math.min((timestamp - startTime) / duration, 1);
+                
+                let currentValue = progress * target;
+                
+                if (suffix === '%') {
+                    el.textContent = prefix + currentValue.toFixed(1) + suffix;
+                } else {
+                    el.textContent = prefix + Math.floor(currentValue) + suffix;
+                }
+                
+                if (progress < 1) {
+                    requestAnimationFrame(step);
+                } else {
+                    el.textContent = prefix + el.dataset.target + suffix;
+                }
+            };
+            
+            requestAnimationFrame(step);
+        };
+        
+        // --- Intersection Observer to trigger animations on scroll ---
+        const observer = new IntersectionObserver((entries, observerInstance) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    if (entry.target.classList.contains('stat-number')) {
+                        animateCounter(entry.target);
+                        observerInstance.unobserve(entry.target); // Animate only once
+                    }
+                    if (entry.target.id === 'chartCanvas') {
+                        drawChart(chartData.total); // Initial chart draw
+                        observerInstance.unobserve(entry.target); // Animate only once on load
+                    }
+                }
+            });
+        }, { threshold: 0.1 }); // Trigger when 10% of the element is visible
+        
+        // Observe stat numbers and canvas
+        document.querySelectorAll('.stat-number').forEach(el => observer.observe(el));
+        if (canvas) {
+            observer.observe(canvas);
+        }
+        
+        // Lógica para expandir/colapsar las tarjetas de región
+        document.querySelectorAll('.region-card').forEach(card => {
+            card.addEventListener('click', (e) => {
+                // Prevenir que el click en el botón de descarga cierre la tarjeta
+                if (e.target.closest('a')) {
+                    e.stopPropagation();
+                    return;
+                }
+                
+                const content = card.querySelector('.expandable-content');
+                content.classList.toggle('expanded');
+                card.classList.toggle('expanded');
+            });
+        });
+    </script>
+</body>
+</html>
